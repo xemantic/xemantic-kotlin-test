@@ -1,2 +1,2 @@
 # xemantic-kotlin-test
-Simple assertions to work well with power-assert
+Kotlin multiplatform testing library providing power-assert compatible assertions
