@@ -155,7 +155,7 @@ someObject should {
 }
 ```
 
-## Nested Assertions
+### Nested Assertions
 
 You can nest assertions for complex objects:
 
@@ -166,4 +166,12 @@ complexObject should {
     have(nestedProperty == expectedValue2)
   }
 }
+```
+
+## Development
+
+Clone this project, and then run:
+
+```shell
+./gradlew build
 ```
