@@ -1,6 +1,6 @@
 # xemantic-kotlin-test
 
-Kotlin multiplatform testing library providing power-assert compatible assertions
+Kotlin multiplatform testing library providing power-assert compatible DSL and assertions
 
 ## Why?
 
