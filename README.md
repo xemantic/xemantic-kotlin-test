@@ -17,7 +17,7 @@ x shouldBeGreaterThanOrEqualTo 42
 I could write:
 
 ```kotlin
-assert(x >= 5)
+assert(x >= 42)
 ```
 
 Unfortunately the [assert](https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/assert.html)
