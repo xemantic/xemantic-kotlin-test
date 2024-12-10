@@ -67,28 +67,9 @@ have(type == "image/png")
 
 ## Usage
 
-### Setting up Gradle for Kotlin JVM project
+### Setting up Gradle
 
-In your `build.gradle.kts`:
-
-```kotlin
-plugins {
-  kotlin("jvm") version "2.1.0"
-  kotlin("plugin.power-assert") version "2.1.0" // replace with the latest kotlin version
-}
-
-dependencies {
-  testImplementation("com.xemantic.kotlin:xemantic-kotlin-test:0.1.1")
-}
-
-powerAssert {
-  functions = listOf(
-    "com.xemantic.kotlin.test.have"
-  )
-}
-```
-
-### Setting up Gradle for Kotlin Multiplatform project
+#### Setting up Gradle for Kotlin Multiplatform project
 
 In your `build.gradle.kts`:
 
@@ -118,6 +99,27 @@ powerAssert {
 }
 ```
 
+#### Setting up Gradle for Kotlin JVM project
+
+In your `build.gradle.kts`:
+
+```kotlin
+plugins {
+  kotlin("jvm") version "2.1.0"
+  kotlin("plugin.power-assert") version "2.1.0" // replace with the latest kotlin version
+}
+
+dependencies {
+  testImplementation("com.xemantic.kotlin:xemantic-kotlin-test:0.1.1")
+}
+
+powerAssert {
+  functions = listOf(
+    "com.xemantic.kotlin.test.have"
+  )
+}
+```
+
 ### Basic Assertions
 
 The library introduces the [should](src/commonMain/kotlin/Assertions.kt) infix function, which allows you to chain assertions on an object:
@@ -138,7 +140,7 @@ someObject should {
 }
 ```
 
-> ![TIP]
+> [!TIP]
 > After calling `be` function with expected type, all the subsequent calls within 
 > `should {}` will have access to the properties of the expected type,
 > like if `this`, representing `someObject`, was cast to the expected type.
