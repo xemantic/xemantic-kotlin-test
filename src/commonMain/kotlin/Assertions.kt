@@ -19,7 +19,7 @@ package com.xemantic.kotlin.test
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.InvocationKind
 import kotlin.contracts.contract
-import kotlin.test.assertIs
+import kotlin.reflect.typeOf
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
@@ -29,19 +29,40 @@ public infix fun <T> T?.should(block: T.() -> Unit) {
     callsInPlace(block, InvocationKind.EXACTLY_ONCE)
   }
   assertNotNull(this)
-  block()
+  try {
+    block()
+  } catch (e : AssertionError) {
+    throw ShouldAssertionError(
+      message = if (e is ShouldAssertionError) {
+        "$this\n containing:\n${e.message}"
+      } else {
+        "$this\n should:${e.message}"
+      },
+      cause = e
+    )
+  }
 }
 
 @OptIn(ExperimentalContracts::class)
-public inline fun <reified T> Any?.be(
-  message: String? = null
-) {
+public inline fun <reified T> Any?.be() {
   contract {
     returns() implies (this@be is T)
   }
-  assertIs<T>(this, message)
+  if (this !is T) {
+    throw AssertionError(
+      " be of type <${typeOf<T>()}>, actual <${this!!::class}>"
+    )
+  }
 }
 
-public fun have(condition: Boolean, message: String? = null) {
+public fun have(
+  condition: Boolean,
+  message: String? = null
+) {
   assertTrue(condition, message)
 }
+
+public class ShouldAssertionError(
+  message: String,
+  cause: AssertionError
+) : AssertionError(message, cause)

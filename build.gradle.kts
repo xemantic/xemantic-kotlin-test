@@ -147,7 +147,6 @@ tasks.withType<Test> {
 
 powerAssert {
   functions = listOf(
-//    "com.xemantic.kotlin.test.should",
     "com.xemantic.kotlin.test.have"
   )
 }

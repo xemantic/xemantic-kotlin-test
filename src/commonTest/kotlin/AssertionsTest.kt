@@ -23,6 +23,13 @@ import kotlin.test.assertFailsWith
 
 class AssertionsTest {
 
+  // test classes to test assertions against
+
+  data class Message(
+    val id: Int,
+    val content: List<Content>
+  )
+
   interface Content {
     val type: String
   }
@@ -30,22 +37,30 @@ class AssertionsTest {
   data class Text(
     val text: String,
   ) : Content {
+
     override val type = "text"
+
   }
 
   data class Image(
     val path: String,
     val width: Int,
-    val height: Int
+    val height: Int,
+    val mediaType: MediaType
   ) : Content {
+
     override val type = "image"
+
+    data class MediaType(
+      val type: String
+    )
+
   }
 
-  data class Message(
-    val id: Int,
-    val content: List<Content>
-  )
-
+  /**
+   * Message is our main test class - the root in hierarchical structure.
+   * It is nullable, because we also want to test if `should` works with nullable instances.
+   */
   val message: Message? = Message(
     id = 42,
     content = listOf(
@@ -53,13 +68,15 @@ class AssertionsTest {
       Image(
         path = "image.png",
         width = 1024,
-        height = 768
+        height = 768,
+        mediaType = Image.MediaType("image/png")
       )
     )
   )
 
+
   @Test
-  fun `Should pass`() {
+  fun `Should pass all assertions on default message instance`() {
     message should {
       have(id == 42)
       have(content.size == 2)
@@ -73,6 +90,9 @@ class AssertionsTest {
         have(type == "image")
         have(width >= 800)
         have(height >= 600)
+        mediaType should {
+          have(type == "image/png")
+        }
       }
     }
   }
@@ -80,22 +100,44 @@ class AssertionsTest {
   @Test
   fun `Should fail when asserting on null object`() {
     val nullMessage: Message? = null
-    assertFailsWith<AssertionError> {
+    val exception = assertFailsWith<AssertionError> {
       nullMessage should {}
-    } should {
-      have(message == "actual value is null")
     }
+    assertEquals(
+      expected = "actual value is null",
+      actual = exception.message
+    )
   }
 
   @Test
   fun `Should fail when asserting wrong instance type`() {
-    assertFailsWith<AssertionError> {
+    val exception = assertFailsWith<AssertionError> {
       message should {
         be<String>()
       }
-    } should {
-      assertContains(message!!, "Expected value to be of type")
     }
+    assertContains(exception.message!!, "should: be of type")
+  }
+
+  @Test
+  fun `Should fail when asserting wrong message id`() {
+    val exception = assertFailsWith<AssertionError> {
+      message should {
+        have(id == 0)
+      }
+    }
+    assertEquals(
+      expected = """
+        |Message(id=42, content=[Text(text=Hello there), Image(path=image.png, width=1024, height=768, mediaType=MediaType(type=image/png))])
+        | should:
+        |have(id == 0)
+        |     |  |
+        |     |  false
+        |     42
+        |
+      """.trimMargin(),
+      actual = exception.message
+    )
   }
 
   @Test
@@ -105,15 +147,67 @@ class AssertionsTest {
         have(content.isEmpty())
       }
     }
-    assertEquals("""
-      |
-      |have(content.isEmpty())
-      |     |       |
-      |     |       false
-      |     [Text(text=Hello there), Image(path=image.png, width=1024, height=768)]
-      |
+    assertEquals(
+      expected = """
+        |Message(id=42, content=[Text(text=Hello there), Image(path=image.png, width=1024, height=768, mediaType=MediaType(type=image/png))])
+        | should:
+        |have(content.isEmpty())
+        |     |       |
+        |     |       false
+        |     [Text(text=Hello there), Image(path=image.png, width=1024, height=768, mediaType=MediaType(type=image/png))]
+        |
       """.trimMargin(),
-      exception.message
+      actual = exception.message
+    )
+  }
+
+  @Test
+  fun `Should fail when asserting wrong content type`() {
+    val exception = assertFailsWith<AssertionError> {
+      message should {
+        content[0] should {
+          be<Image>()
+        }
+      }
+    }
+    assertEquals(
+      expected = $$"""
+        |Message(id=42, content=[Text(text=Hello there), Image(path=image.png, width=1024, height=768, mediaType=MediaType(type=image/png))])
+        | containing:
+        |Text(text=Hello there)
+        | should: be of type <com.xemantic.kotlin.test.AssertionsTest$Image (Kotlin reflection is not available)>, actual <class com.xemantic.kotlin.test.AssertionsTest$Text (Kotlin reflection is not available)>
+       """.trimMargin(),
+      actual = exception.message
+    )
+  }
+
+  @Test
+  fun `Should fail when asserting wrong message-image-mediaType`() {
+    val exception = assertFailsWith<AssertionError> {
+      message should {
+        content[1] should {
+          be<Image>()
+          mediaType should {
+            have(type == "image/jpeg")
+          }
+        }
+      }
+    }
+    assertEquals(
+      expected = """
+        |Message(id=42, content=[Text(text=Hello there), Image(path=image.png, width=1024, height=768, mediaType=MediaType(type=image/png))])
+        | containing:
+        |Image(path=image.png, width=1024, height=768, mediaType=MediaType(type=image/png))
+        | containing:
+        |MediaType(type=image/png)
+        | should:
+        |have(type == "image/jpeg")
+        |     |    |
+        |     |    false
+        |     image/png
+        |
+      """.trimMargin(),
+      actual = exception.message
     )
   }
 
