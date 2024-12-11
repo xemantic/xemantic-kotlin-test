@@ -22,6 +22,15 @@ import kotlin.contracts.contract
 import kotlin.reflect.typeOf
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
+import kotlin.test.asserter
+
+@OptIn(ExperimentalContracts::class)
+public fun assert(actual: Boolean, message: String? = null) {
+  contract {
+    returns() implies actual
+  }
+  return asserter.assertTrue(message ?: "Expected value to be true.", actual)
+}
 
 @OptIn(ExperimentalContracts::class)
 public infix fun <T> T?.should(block: T.() -> Unit) {
