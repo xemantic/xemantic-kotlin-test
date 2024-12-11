@@ -7,7 +7,7 @@ Kotlin multiplatform testing library providing power-assert compatible DSL and a
 I am mostly using [kotest](https://kotest.io/) library for writing test assertions
 in my projects. When [power-assert](https://kotlinlang.org/docs/power-assert.html)
 became the official Kotlin compiler plugin, I also realized that most of the kotest
-assertions can be replaced with something which suits my purposes better.
+assertions can be replaced with something which suits my needs much better.
 Instead of writing:
 
 ```kotlin
@@ -20,14 +20,8 @@ I could write:
 assert(x >= 42)
 ```
 
-Unfortunately the [assert](https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/assert.html)
-function is supported at the moment only for `JVM` and `Native` out of all the Kotlin
-multiplatform targets. So for my multiplatform libraries it would rather be
-[assertTrue](https://kotlinlang.org/api/core/kotlin-test/kotlin.test/assert-true.html), but
-... it is becoming too verbose.
-
-Quite often I am asserting the state of hierarchical data
-structures, therefore I came up with this syntax:
+Next to this, I am quite often asserting the state of hierarchical data
+structures, therefore I came up with such a syntax:
 
 ```kotlin
 message should {
@@ -121,6 +115,18 @@ powerAssert {
 ```
 
 ### Basic Assertions
+
+```kotlin
+assert(2 + 2 == 4)
+```
+
+> [!NOTE]
+> The [assert](https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/assert.html)
+> function in Kotlin stdlib is providing `assert` only for `JVM` and `Native` out of all the Kotlin
+> multiplatform targets. The multiplatform `assert` function can be
+> imported from `com.xemantic.kotlin.test.assert`
+
+### Asserting object properties
 
 The library introduces the [should](src/commonMain/kotlin/Assertions.kt) infix function, which allows you to chain assertions on an object:
 

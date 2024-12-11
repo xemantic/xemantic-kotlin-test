@@ -208,4 +208,23 @@ class AssertionsTest {
     )
   }
 
+  @Test
+  fun `Should fail when assertion resolves to false`() {
+    val exception = assertFailsWith<AssertionError> {
+      assert(2 + 2 == 2 + 3)
+    }
+    assertEquals(
+      expected = """
+        |
+        |assert(2 + 2 == 2 + 3)
+        |         |   |    |
+        |         |   |    5
+        |         |   false
+        |         4
+        |
+      """.trimMargin(),
+      actual = exception.message
+    )
+  }
+
 }
