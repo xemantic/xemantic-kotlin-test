@@ -1,4 +1,6 @@
 public final class com/xemantic/kotlin/test/AssertionsKt {
+	public static final fun assert (ZLjava/lang/String;)V
+	public static synthetic fun assert$default (ZLjava/lang/String;ILjava/lang/Object;)V
 	public static final fun have (ZLjava/lang/String;)V
 	public static synthetic fun have$default (ZLjava/lang/String;ILjava/lang/Object;)V
 	public static final fun should (Ljava/lang/Object;Lkotlin/jvm/functions/Function1;)V
