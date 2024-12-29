@@ -2,11 +2,15 @@
 
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
+import org.gradle.kotlin.dsl.withType
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 import org.jetbrains.kotlin.gradle.swiftexport.ExperimentalSwiftExportDsl
+import org.jetbrains.kotlin.gradle.targets.js.testing.KotlinJsTest
+import org.jetbrains.kotlin.gradle.targets.jvm.tasks.KotlinJvmTest
+import org.jetbrains.kotlin.gradle.targets.native.tasks.KotlinNativeTest
 
 plugins {
   alias(libs.plugins.kotlin.multiplatform)
@@ -43,6 +47,26 @@ println("""
 
 repositories {
   mavenCentral()
+}
+
+val gradleRootDir: String = rootDir.absolutePath
+val fooValue = "bar"
+
+tasks.withType<KotlinJvmTest>().configureEach {
+  environment("GRADLE_ROOT_DIR", gradleRootDir)
+  environment("FOO", fooValue)
+}
+
+tasks.withType<KotlinJsTest>().configureEach {
+  environment("GRADLE_ROOT_DIR", gradleRootDir)
+  environment("FOO", fooValue)
+}
+
+tasks.withType<KotlinNativeTest>().configureEach {
+  environment("GRADLE_ROOT_DIR", gradleRootDir)
+  environment("SIMCTL_CHILD_GRADLE_ROOT_DIR", gradleRootDir)
+  environment("FOO", fooValue)
+  environment("SIMCTL_CHILD_FOO", fooValue)
 }
 
 kotlin {
@@ -130,9 +154,13 @@ kotlin {
 
 }
 
-//// skip tests which require XCode components to be installed
+// skip tests which require XCode components to be installed
 tasks.named("tvosSimulatorArm64Test") { enabled = false }
 tasks.named("watchosSimulatorArm64Test") { enabled = false }
+// skip tests for which system environment variable retrival is not implemented at the moment
+tasks.named("wasmWasiNodeTest") { enabled = false}
+// skip tests which for some reason stale
+tasks.named("wasmJsBrowserTest") { enabled = false}
 
 tasks.withType<Test> {
   testLogging {

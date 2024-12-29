@@ -47,19 +47,19 @@ fi
 ESCAPED_GROUP_ID=$(echo "$GROUP_ID" | sed 's/\./\\./g')
 
 # Create the pattern to match
-PATTERN="\"$ESCAPED_GROUP_ID:$ARTIFACT_ID:[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*\""
+PATTERN="\"$ESCAPED_GROUP_ID:$ARTIFACT_ID:[0-9]+(\.[0-9]+){0,2}\""
 
 # Create the replacement string
 REPLACEMENT="\"$GROUP_ID:$ARTIFACT_ID:$VERSION\""
 
 # Check if the pattern exists in the file
-if ! grep -q "$GROUP_ID:$ARTIFACT_ID:[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*" README.md; then
+if ! grep -Eq "$GROUP_ID:$ARTIFACT_ID:[0-9]+(\.[0-9]+){0,2}" README.md; then
     echo "Error: Dependency pattern not found in README.md"
     exit 1
 fi
 
 # Perform the replacement and save to a temporary file
-sed "s|$PATTERN|$REPLACEMENT|g" README.md > README.md.tmp
+sed -E "s|$PATTERN|$REPLACEMENT|g" README.md > README.md.tmp
 
 # Check if sed made any changes
 if cmp -s README.md README.md.tmp; then

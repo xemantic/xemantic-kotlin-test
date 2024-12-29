@@ -4,10 +4,8 @@ Kotlin multiplatform testing library providing power-assert compatible DSL and a
 
 ## Why?
 
-I am mostly using [kotest](https://kotest.io/) library for writing test assertions
-in my projects. When [power-assert](https://kotlinlang.org/docs/power-assert.html)
-became the official Kotlin compiler plugin, I also realized that most of the kotest
-assertions can be replaced with something which suits my needs much better.
+I am mostly using [kotest](https://kotest.io/) library for writing test assertions in my projects.
+When [power-assert](https://kotlinlang.org/docs/power-assert.html) became the official Kotlin compiler plugin, I also realized that most of the kotest assertions can be replaced with something which suits my needs much better.
 Instead of writing:
 
 ```kotlin
@@ -171,6 +169,76 @@ complexObject should {
   nestedObject should {
     have(nestedProperty == expectedValue2)
   }
+}
+```
+
+### Test Context
+
+You can obtain access to test context like:
+
+* Stable absolute path of the current gradle root dir, so that the test files can be used in tests of non-browser platforms.
+* Environment variables, accessible on almost all the platforms, including access to predefined set of environment variables in tests of browser platforms (e.g. API keys).
+
+See [TextContext](src/commonMain/kotlin/TestContext.kt) for details.
+
+You have to add to `build.gradle.kts`:
+
+```kotlin
+val gradleRootDir: String = rootDir.absolutePath
+val fooValue = "bar"
+
+tasks.withType<KotlinJvmTest>().configureEach {
+  environment("GRADLE_ROOT_DIR", gradleRootDir)
+  environment("FOO", fooValue)
+}
+
+tasks.withType<KotlinJsTest>().configureEach {
+  environment("GRADLE_ROOT_DIR", gradleRootDir)
+  environment("FOO", fooValue)
+}
+
+tasks.withType<KotlinNativeTest>().configureEach {
+  environment("GRADLE_ROOT_DIR", gradleRootDir)
+  environment("SIMCTL_CHILD_GRADLE_ROOT_DIR", gradleRootDir)
+  environment("FOO", fooValue)
+  environment("SIMCTL_CHILD_FOO", fooValue)
+}
+```
+
+and specify environment variables you are interested in. The `SIMCTL_CHILD_` is used in tests running inside emulators.
+
+To pass environment variables to browser tests, you have to create `webpack.confg.d` folder and drop this file name `env-config.js`:
+
+```js
+const webpack = require("webpack");
+const envPlugin = new webpack.DefinePlugin({
+  'process': {
+    'env': {
+      'FOO': JSON.stringify(process.env.FOO)
+    }
+  }
+});
+config.plugins.push(envPlugin);
+```
+
+Pick environment variables which should be provided to browser tests.
+
+Then you can write test like:
+
+```kotlin
+class TestContextTest {
+
+  @Test
+  fun `Should read gradleRootDir`() {
+    if (isBrowserPlatform) return // we don't have access to Gradle root dir
+    assert(gradleRootDir.isNotEmpty())
+  }
+
+  @Test
+  fun `Should read predefined environment variable`() {
+    assert(getEnv("FOO") == "bar")
+  }
+
 }
 ```
 
