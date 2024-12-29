@@ -1,6 +1,6 @@
 # xemantic-kotlin-test
 
-Kotlin multiplatform testing library providing power-assert compatible DSL and assertions
+Kotlin multiplatform testing library providing power-assert compatible DSL and assertions and some other goodies.
 
 ## Why?
 
@@ -56,6 +56,10 @@ have(type == "image/png")
      |    false
      image/jpeg
 ```
+
+In addition, the library supports:
+* uniform access to project test files across non-browser platforms
+* access to defined set of environment variables in browser platforms
 
 ## Usage
 
