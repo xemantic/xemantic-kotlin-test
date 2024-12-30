@@ -90,6 +90,7 @@ kotlin {
 
 powerAssert {
   functions = listOf(
+    "com.xemantic.kotlin.test.assert",
     "com.xemantic.kotlin.test.have"
   )
 }
@@ -111,6 +112,7 @@ dependencies {
 
 powerAssert {
   functions = listOf(
+    "com.xemantic.kotlin.test.assert",    
     "com.xemantic.kotlin.test.have"
   )
 }
@@ -123,9 +125,8 @@ assert(2 + 2 == 4)
 ```
 
 > [!NOTE]
-> The [assert](https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/assert.html)
-> function in Kotlin stdlib is providing `assert` only for `JVM` and `Native` out of all the Kotlin
-> multiplatform targets. The multiplatform `assert` function can be
+> The [assert](https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/assert.html) function in Kotlin stdlib is providing `assert` only for `JVM` and `Native` out of all the Kotlin multiplatform targets.
+> The multiplatform `assert` function can be
 > imported from `com.xemantic.kotlin.test.assert`
 
 ### Asserting object properties
@@ -211,7 +212,7 @@ tasks.withType<KotlinNativeTest>().configureEach {
 
 and specify environment variables you are interested in. The `SIMCTL_CHILD_` is used in tests running inside emulators.
 
-To pass environment variables to browser tests, you have to create `webpack.confg.d` folder and drop this file name `env-config.js`:
+To pass environment variables to browser tests, you have to create `webpack.confg.d` folder and drop this file named `env-config.js`:
 
 ```js
 const webpack = require("webpack");
