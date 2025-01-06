@@ -6,16 +6,16 @@ public final class com/xemantic/kotlin/test/AssertionsKt {
 	public static final fun should (Ljava/lang/Object;Lkotlin/jvm/functions/Function1;)V
 }
 
-public final class com/xemantic/kotlin/test/JvmTestContextKt {
-	public static final fun getEnv (Ljava/lang/String;)Ljava/lang/String;
-	public static final fun isBrowserPlatform ()Z
-}
-
 public final class com/xemantic/kotlin/test/ShouldAssertionError : java/lang/AssertionError {
 	public fun <init> (Ljava/lang/String;Ljava/lang/AssertionError;)V
 }
 
 public final class com/xemantic/kotlin/test/TestContextKt {
 	public static final fun getGradleRootDir ()Ljava/lang/String;
+}
+
+public final class com/xemantic/kotlin/test/TestContext_jvmKt {
+	public static final fun getEnv (Ljava/lang/String;)Ljava/lang/String;
+	public static final fun isBrowserPlatform ()Z
 }
 
