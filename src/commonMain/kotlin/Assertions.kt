@@ -26,52 +26,52 @@ import kotlin.test.asserter
 
 @OptIn(ExperimentalContracts::class)
 public fun assert(actual: Boolean, message: String? = null) {
-  contract {
-    returns() implies actual
-  }
-  return asserter.assertTrue(message ?: "Expected value to be true.", actual)
+    contract {
+        returns() implies actual
+    }
+    return asserter.assertTrue(message ?: "Expected value to be true.", actual)
 }
 
 @OptIn(ExperimentalContracts::class)
 public infix fun <T> T?.should(block: T.() -> Unit) {
-  contract {
-    callsInPlace(block, InvocationKind.EXACTLY_ONCE)
-  }
-  assertNotNull(this)
-  try {
-    block()
-  } catch (e : AssertionError) {
-    throw ShouldAssertionError(
-      message = if (e is ShouldAssertionError) {
-        "$this\n containing:\n${e.message}"
-      } else {
-        "$this\n should:${e.message}"
-      },
-      cause = e
-    )
-  }
+    contract {
+        callsInPlace(block, InvocationKind.EXACTLY_ONCE)
+    }
+    assertNotNull(this)
+    try {
+        block()
+    } catch (e: AssertionError) {
+        throw ShouldAssertionError(
+            message = if (e is ShouldAssertionError) {
+                "$this\n containing:\n${e.message}"
+            } else {
+                "$this\n should:${e.message}"
+            },
+            cause = e
+        )
+    }
 }
 
 @OptIn(ExperimentalContracts::class)
 public inline fun <reified T> Any?.be() {
-  contract {
-    returns() implies (this@be is T)
-  }
-  if (this !is T) {
-    throw AssertionError(
-      " be of type <${typeOf<T>()}>, actual <${this!!::class}>"
-    )
-  }
+    contract {
+        returns() implies (this@be is T)
+    }
+    if (this !is T) {
+        throw AssertionError(
+            " be of type <${typeOf<T>()}>, actual <${this!!::class}>"
+        )
+    }
 }
 
 public fun have(
-  condition: Boolean,
-  message: String? = null
+    condition: Boolean,
+    message: String? = null
 ) {
-  assertTrue(condition, message)
+    assertTrue(condition, message)
 }
 
 public class ShouldAssertionError(
-  message: String,
-  cause: AssertionError
+    message: String,
+    cause: AssertionError
 ) : AssertionError(message, cause)

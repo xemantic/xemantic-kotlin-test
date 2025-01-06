@@ -22,7 +22,7 @@ import platform.posix.getenv
 
 @OptIn(ExperimentalForeignApi::class)
 public actual fun getEnv(
-  name: String
+    name: String
 ): String? = getenv(name)?.toKString()
 
 public actual val isBrowserPlatform: Boolean = false

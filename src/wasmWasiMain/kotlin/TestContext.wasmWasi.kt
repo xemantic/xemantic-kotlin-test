@@ -18,7 +18,7 @@ package com.xemantic.kotlin.test
 
 // it seems doable, however requires lots of memory management and native magic
 public actual fun getEnv(
-  name: String
+    name: String
 ): String? = TODO()
 
 public actual val isBrowserPlatform: Boolean = TODO()
