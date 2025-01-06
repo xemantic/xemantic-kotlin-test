@@ -20,20 +20,20 @@ import kotlin.test.Test
 
 class TestContextTest {
 
-  @Test
-  fun `Should read gradleRootDir`() {
-    if (isBrowserPlatform) return // we don't have access to Gradle root dir
-    assert(gradleRootDir.isNotEmpty())
-  }
+    @Test
+    fun `Should read gradleRootDir`() {
+        if (isBrowserPlatform) return // we don't have access to Gradle root dir
+        assert(gradleRootDir.isNotEmpty())
+    }
 
-  @Test
-  fun `Should read predefined environment variable`() {
-    assert(getEnv("FOO") == "bar")
-  }
+    @Test
+    fun `Should read predefined environment variable`() {
+        assert(getEnv("FOO") == "bar")
+    }
 
-  @Test
-  fun `Should not read undefined environment variable`() {
-    assert(getEnv("BAR") == null)
-  }
+    @Test
+    fun `Should not read undefined environment variable`() {
+        assert(getEnv("BAR") == null)
+    }
 
 }

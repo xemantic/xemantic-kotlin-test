@@ -3,5 +3,5 @@ val name = "xemantic-kotlin-test"
 
 rootProject.name = name
 gradle.beforeProject {
-  group = groupId
+    group = groupId
 }

@@ -17,14 +17,7 @@
 package com.xemantic.kotlin.test
 
 public actual fun getEnv(
-  name: String
-): String? {
-  val variable = process.env[name]
-  return if (variable) return variable else null
-}
+    name: String
+): String? = System.getenv(name)
 
-public actual val isBrowserPlatform: Boolean = js(
-  "typeof window !== 'undefined'"
-)
-
-private external val process: dynamic
+public actual val isBrowserPlatform: Boolean = false
