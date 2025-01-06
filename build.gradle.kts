@@ -210,8 +210,8 @@ publishing {
             artifact(javadocJar)
             pom {
                 name = "xemantic-kotlin-test"
-                description = "Kotlin multiplatform testing library proving power-assert compatible assertions, " +
-                        "and some other goodies"
+                description = "The power-assert compatible assertions DSL and some other testing goodies - " +
+                        "a Kotlin multiplatform testing library."
                 url = "https://github.com/$githubAccount/${rootProject.name}"
                 inceptionYear = "2024"
                 organization {
