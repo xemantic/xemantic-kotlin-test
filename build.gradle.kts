@@ -71,8 +71,6 @@ tasks.withType<KotlinNativeTest>().configureEach {
 
 kotlin {
 
-    applyDefaultHierarchyTemplate()
-
     explicitApi()
 
     compilerOptions {
