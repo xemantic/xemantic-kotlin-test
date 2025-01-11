@@ -10,6 +10,7 @@ import org.jetbrains.kotlin.gradle.targets.js.testing.KotlinJsTest
 import org.jetbrains.kotlin.gradle.targets.jvm.tasks.KotlinJvmTest
 import org.jetbrains.kotlin.gradle.targets.native.tasks.KotlinNativeTest
 import org.jreleaser.model.Active
+import java.time.LocalDate
 
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
@@ -22,7 +23,17 @@ plugins {
     alias(libs.plugins.jreleaser)
 }
 
-val githubAccount = "xemantic"
+data class Settings(
+    val description: String,
+    val gitHubAccount: String,
+    val copyright: String
+)
+
+val settings = Settings(
+    description = "The power-assert compatible assertions DSL and some other testing goodies - a Kotlin multiplatform testing library",
+    gitHubAccount = "xemantic",
+    copyright = "(c) ${LocalDate.now().year} Xemantic"
+)
 
 val javaTarget = libs.versions.javaTarget.get()
 val kotlinTarget = KotlinVersion.fromVersion(libs.versions.kotlinTarget.get())
@@ -179,7 +190,7 @@ powerAssert {
 // https://kotlinlang.org/docs/dokka-migration.html#adjust-configuration-options
 dokka {
     pluginsConfiguration.html {
-        footerMessage.set("(c) 2024 Xemantic")
+        footerMessage.set(settings.copyright)
     }
 }
 
@@ -199,7 +210,7 @@ publishing {
         } else {
             maven {
                 name = "GitHubPackages"
-                setUrl("https://maven.pkg.github.com/$githubAccount/${rootProject.name}")
+                setUrl("https://maven.pkg.github.com/${settings.gitHubAccount}/${rootProject.name}")
                 credentials {
                     username = githubActor
                     password = githubToken
@@ -257,11 +268,10 @@ if (isReleaseBuild) {
     }
 
     jreleaser {
-//        project {
-//            description = "The power-assert compatible assertions DSL and some other testing goodies - " +
-//                    "a Kotlin multiplatform testing library."
-//            copyright = "(c) 2024 Xemantic"
-//        }
+        project {
+            description = settings.description
+            copyright = settings.copyright
+        }
         deploy {
             maven {
                 mavenCentral {
@@ -301,10 +311,9 @@ if (isReleaseBuild) {
 
 
 fun MavenPom.setUpPomDetails() {
-    name = "xemantic-kotlin-test"
-    description = "The power-assert compatible assertions DSL and some other testing goodies - " +
-            "a Kotlin multiplatform testing library."
-    url = "https://github.com/$githubAccount/${rootProject.name}"
+    name = rootProject.name
+    description = settings.description
+    url = "https://github.com/${settings.gitHubAccount}/${rootProject.name}"
     inceptionYear = "2024"
     organization {
         name = "Xemantic"
@@ -318,17 +327,17 @@ fun MavenPom.setUpPomDetails() {
         }
     }
     scm {
-        url = "https://github.com/$githubAccount/${rootProject.name}"
-        connection = "scm:git:git:github.com/$githubAccount/${rootProject.name}.git"
-        developerConnection = "scm:git:https://github.com/$githubAccount/${rootProject.name}.git"
+        url = "https://github.com/${settings.gitHubAccount}/${rootProject.name}"
+        connection = "scm:git:git:github.com/${settings.gitHubAccount}/${rootProject.name}.git"
+        developerConnection = "scm:git:https://github.com/${settings.gitHubAccount}/${rootProject.name}.git"
     }
     ciManagement {
         system = "GitHub"
-        url = "https://github.com/$githubAccount/${rootProject.name}/actions"
+        url = "https://github.com/${settings.gitHubAccount}/${rootProject.name}/actions"
     }
     issueManagement {
         system = "GitHub"
-        url = "https://github.com/$githubAccount/${rootProject.name}/issues"
+        url = "https://github.com/${settings.gitHubAccount}/${rootProject.name}/issues"
     }
     developers {
         developer {
