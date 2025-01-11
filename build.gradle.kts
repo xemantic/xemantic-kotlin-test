@@ -228,6 +228,10 @@ publishing {
 
 if (isReleaseBuild) {
 
+    tasks.named("jreleaserDeploy").configure {
+        mustRunAfter("publish")
+    }
+
     stagingDeployDir.mkdirs()
 
     // fixes https://github.com/jreleaser/jreleaser/issues/1292
@@ -268,6 +272,7 @@ if (isReleaseBuild) {
     }
 
     jreleaser {
+
         project {
             description = settings.description
             copyright = settings.copyright
