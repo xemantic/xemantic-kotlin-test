@@ -10,6 +10,8 @@ import org.jetbrains.kotlin.gradle.swiftexport.ExperimentalSwiftExportDsl
 import org.jetbrains.kotlin.gradle.targets.js.testing.KotlinJsTest
 import org.jetbrains.kotlin.gradle.targets.jvm.tasks.KotlinJvmTest
 import org.jetbrains.kotlin.gradle.targets.native.tasks.KotlinNativeTest
+import org.jreleaser.model.Active
+import java.time.LocalDate
 
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
@@ -19,10 +21,20 @@ plugins {
     alias(libs.plugins.versions)
     `maven-publish`
     signing
-    alias(libs.plugins.publish)
+    alias(libs.plugins.jreleaser)
 }
 
-val githubAccount = "xemantic"
+data class Settings(
+    val description: String,
+    val gitHubAccount: String,
+    val copyright: String
+)
+
+val settings = Settings(
+    description = "The power-assert compatible assertions DSL and some other testing goodies - a Kotlin multiplatform testing library",
+    gitHubAccount = "xemantic",
+    copyright = "(c) ${LocalDate.now().year} Xemantic"
+)
 
 val javaTarget = libs.versions.javaTarget.get()
 val kotlinTarget = KotlinVersion.fromVersion(libs.versions.kotlinTarget.get())
@@ -32,8 +44,6 @@ val githubActor: String? by project
 val githubToken: String? by project
 val signingKey: String? by project
 val signingPassword: String? by project
-val sonatypeUser: String? by project
-val sonatypePassword: String? by project
 
 println(
 """
@@ -181,7 +191,7 @@ powerAssert {
 // https://kotlinlang.org/docs/dokka-migration.html#adjust-configuration-options
 dokka {
     pluginsConfiguration.html {
-        footerMessage.set("(c) 2024 Xemantic")
+        footerMessage.set(settings.copyright)
     }
 }
 
@@ -190,12 +200,18 @@ val javadocJar by tasks.registering(Jar::class) {
     from(tasks.dokkaGeneratePublicationHtml)
 }
 
+val stagingDeployDir = layout.buildDirectory.dir("staging-deploy").get().asFile
+
 publishing {
     repositories {
-        if (!isReleaseBuild) {
+        if (isReleaseBuild) {
+            maven {
+                url = stagingDeployDir.toURI()
+            }
+        } else {
             maven {
                 name = "GitHubPackages"
-                setUrl("https://maven.pkg.github.com/$githubAccount/${rootProject.name}")
+                setUrl("https://maven.pkg.github.com/${settings.gitHubAccount}/${rootProject.name}")
                 credentials {
                     username = githubActor
                     password = githubToken
@@ -206,49 +222,21 @@ publishing {
     publications {
         withType<MavenPublication> {
             artifact(javadocJar)
-            pom {
-                name = "xemantic-kotlin-test"
-                description = "The power-assert compatible assertions DSL and some other testing goodies - " +
-                        "a Kotlin multiplatform testing library."
-                url = "https://github.com/$githubAccount/${rootProject.name}"
-                inceptionYear = "2024"
-                organization {
-                    name = "Xemantic"
-                    url = "https://xemantic.com"
-                }
-                licenses {
-                    license {
-                        name = "The Apache Software License, Version 2.0"
-                        url = "http://www.apache.org/licenses/LICENSE-2.0.txt"
-                        distribution = "repo"
-                    }
-                }
-                scm {
-                    url = "https://github.com/$githubAccount/${rootProject.name}"
-                    connection = "scm:git:git:github.com/$githubAccount/${rootProject.name}.git"
-                    developerConnection = "scm:git:https://github.com/$githubAccount/${rootProject.name}.git"
-                }
-                ciManagement {
-                    system = "GitHub"
-                    url = "https://github.com/$githubAccount/${rootProject.name}/actions"
-                }
-                issueManagement {
-                    system = "GitHub"
-                    url = "https://github.com/$githubAccount/${rootProject.name}/issues"
-                }
-                developers {
-                    developer {
-                        id = "morisil"
-                        name = "Kazik Pogoda"
-                        email = "morisil@xemantic.com"
-                    }
-                }
-            }
+            pom { setUpPomDetails() }
         }
     }
 }
 
 if (isReleaseBuild) {
+
+    tasks.named("jreleaserDeploy").configure {
+        mustRunAfter("publish")
+    }
+
+    stagingDeployDir.mkdirs()
+
+    // fixes https://github.com/jreleaser/jreleaser/issues/1292
+    layout.buildDirectory.dir("jreleaser").get().asFile.mkdir()
 
     // workaround for KMP/gradle signing issue
     // https://github.com/gradle/gradle/issues/26091
@@ -284,15 +272,69 @@ if (isReleaseBuild) {
         sign(publishing.publications)
     }
 
-    nexusPublishing {
-        repositories {
-            sonatype {  //only for users registered in Sonatype after 24 Feb 2021
-                nexusUrl.set(uri("https://s01.oss.sonatype.org/service/local/"))
-                snapshotRepositoryUrl.set(uri("https://s01.oss.sonatype.org/content/repositories/snapshots/"))
-                username.set(sonatypeUser)
-                password.set(sonatypePassword)
+    jreleaser {
+        project {
+            description = settings.description
+            copyright = settings.copyright
+        }
+        deploy {
+            maven {
+                mavenCentral {
+                    create("maven-central") {
+                        applyMavenCentralRules = false // Already checked
+                        active = Active.ALWAYS
+                        url = "https://central.sonatype.com/api/v1/publisher"
+                        maxRetries = 240
+                        stagingRepository(stagingDeployDir.path)
+                    }
+                }
+            }
+        }
+        release {
+            github {
+                // we are releasing through GitHub UI
+                skipRelease = true
+                skipTag = true
             }
         }
     }
 
+}
+
+fun MavenPom.setUpPomDetails() {
+    name = rootProject.name
+    description = settings.description
+    url = "https://github.com/${settings.gitHubAccount}/${rootProject.name}"
+    inceptionYear = "2024"
+    organization {
+        name = "Xemantic"
+        url = "https://xemantic.com"
+    }
+    licenses {
+        license {
+            name = "The Apache Software License, Version 2.0"
+            url = "http://www.apache.org/licenses/LICENSE-2.0.txt"
+            distribution = "repo"
+        }
+    }
+    scm {
+        url = "https://github.com/${settings.gitHubAccount}/${rootProject.name}"
+        connection = "scm:git:git:github.com/${settings.gitHubAccount}/${rootProject.name}.git"
+        developerConnection = "scm:git:https://github.com/${settings.gitHubAccount}/${rootProject.name}.git"
+    }
+    ciManagement {
+        system = "GitHub"
+        url = "https://github.com/${settings.gitHubAccount}/${rootProject.name}/actions"
+    }
+    issueManagement {
+        system = "GitHub"
+        url = "https://github.com/${settings.gitHubAccount}/${rootProject.name}/issues"
+    }
+    developers {
+        developer {
+            id = "morisil"
+            name = "Kazik Pogoda"
+            email = "morisil@xemantic.com"
+        }
+    }
 }
