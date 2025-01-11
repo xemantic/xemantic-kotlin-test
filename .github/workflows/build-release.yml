@@ -47,7 +47,7 @@ jobs:
         run: |
           if [ -f build/jreleaser/trace.log ]; then
             echo "trace.log Content:"
-            cat build/jreleaser/trace.log
+            tail -1000 build/jreleaser/trace.log
           else
             echo "trace.log file not found"
           fi
