@@ -272,7 +272,6 @@ if (isReleaseBuild) {
     }
 
     jreleaser {
-
         project {
             description = settings.description
             copyright = settings.copyright

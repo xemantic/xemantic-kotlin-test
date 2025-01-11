@@ -42,6 +42,16 @@ jobs:
           JRELEASER_GITHUB_TOKEN=empty: empty
         run: ./gradlew -Pversion=$VERSION build sourcesJar dokkaGeneratePublicationHtml publish jreleaserDeploy
 
+      - name: Display JReleaser trace.log
+        if: failure()
+        run: |
+          if [ -f build/jrelaser/trace.log ]; then
+            echo "trace.log Content:"
+            cat build/jrelaser/trace.log
+          else
+            echo "trace.log file not found"
+          fi
+
       - name: Checkout main branch
         if: github.ref == 'refs/heads/main'
         uses: actions/checkout@v4.2.2
