@@ -45,9 +45,9 @@ jobs:
       - name: Display JReleaser trace.log
         if: failure()
         run: |
-          if [ -f build/jrelaser/trace.log ]; then
+          if [ -f build/jreleaser/trace.log ]; then
             echo "trace.log Content:"
-            cat build/jrelaser/trace.log
+            cat build/jreleaser/trace.log
           else
             echo "trace.log file not found"
           fi
