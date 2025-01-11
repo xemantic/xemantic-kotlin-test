@@ -43,12 +43,14 @@ jobs:
         run: ./gradlew -Pversion=$VERSION build sourcesJar dokkaGeneratePublicationHtml publish jreleaserDeploy
 
       - name: Checkout main branch
+        if: github.ref == 'refs/heads/main'
         uses: actions/checkout@v4.2.2
         with:
           ref: main
           fetch-depth: 0
 
       - name: Update README
+        if: github.ref == 'refs/heads/main'
         run: sh .github/scripts/update-readme-version.sh
 
       - name: Create Pull Request
