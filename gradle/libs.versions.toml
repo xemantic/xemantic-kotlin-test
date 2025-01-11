@@ -6,7 +6,7 @@ kotlin = "2.1.0"
 
 versionsPlugin = "0.51.0"
 dokkaPlugin = "2.0.0"
-publishPlugin = "2.0.0"
+jreleaserPlugin = "1.16.0"
 
 binaryCompatibilityValidatorPlugin = "0.17.0"
 
@@ -18,5 +18,5 @@ kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref 
 kotlin-plugin-power-assert = { id = "org.jetbrains.kotlin.plugin.power-assert", version.ref = "kotlin" }
 dokka = { id = "org.jetbrains.dokka", version.ref = "dokkaPlugin" }
 versions = { id = "com.github.ben-manes.versions", version.ref = "versionsPlugin" }
-publish = { id = "io.github.gradle-nexus.publish-plugin", version.ref = "publishPlugin" }
 kotlinx-binary-compatibility-validator = { id = "org.jetbrains.kotlinx.binary-compatibility-validator", version.ref = "binaryCompatibilityValidatorPlugin" }
+jreleaser = { id = "org.jreleaser", version.ref = "jreleaserPlugin" }

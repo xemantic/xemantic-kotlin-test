@@ -6,10 +6,10 @@ import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
-import org.jetbrains.kotlin.gradle.swiftexport.ExperimentalSwiftExportDsl
 import org.jetbrains.kotlin.gradle.targets.js.testing.KotlinJsTest
 import org.jetbrains.kotlin.gradle.targets.jvm.tasks.KotlinJvmTest
 import org.jetbrains.kotlin.gradle.targets.native.tasks.KotlinNativeTest
+import org.jreleaser.model.Active
 
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
@@ -19,7 +19,7 @@ plugins {
     alias(libs.plugins.versions)
     `maven-publish`
     signing
-    alias(libs.plugins.publish)
+    alias(libs.plugins.jreleaser)
 }
 
 val githubAccount = "xemantic"
@@ -32,8 +32,6 @@ val githubActor: String? by project
 val githubToken: String? by project
 val signingKey: String? by project
 val signingPassword: String? by project
-val sonatypeUser: String? by project
-val sonatypePassword: String? by project
 
 println(
 """
@@ -92,53 +90,53 @@ kotlin {
         }
     }
 
-    js {
-        browser()
-        nodejs()
-        binaries.library()
-    }
-
-    wasmJs {
-        browser()
-        nodejs()
-        //d8()
-        binaries.library()
-    }
-
-    wasmWasi {
-        nodejs()
-        binaries.library()
-    }
-
-    // native, see https://kotlinlang.org/docs/native-target-support.html
-    // tier 1
-    macosX64()
-    macosArm64()
-    iosSimulatorArm64()
-    iosX64()
-    iosArm64()
-
-    // tier 2
-    linuxX64()
-    linuxArm64()
-    watchosSimulatorArm64()
-    watchosX64()
-    watchosArm32()
-    watchosArm64()
-    tvosSimulatorArm64()
-    tvosX64()
-    tvosArm64()
-
-    // tier 3
-    androidNativeArm32()
-    androidNativeArm64()
-    androidNativeX86()
-    androidNativeX64()
-    mingwX64()
-    watchosDeviceArm64()
-
-    @OptIn(ExperimentalSwiftExportDsl::class)
-    swiftExport {}
+//    js {
+//        browser()
+//        nodejs()
+//        binaries.library()
+//    }
+//
+//    wasmJs {
+//        browser()
+//        nodejs()
+//        //d8()
+//        binaries.library()
+//    }
+//
+//    wasmWasi {
+//        nodejs()
+//        binaries.library()
+//    }
+//
+//    // native, see https://kotlinlang.org/docs/native-target-support.html
+//    // tier 1
+//    macosX64()
+//    macosArm64()
+//    iosSimulatorArm64()
+//    iosX64()
+//    iosArm64()
+//
+//    // tier 2
+//    linuxX64()
+//    linuxArm64()
+//    watchosSimulatorArm64()
+//    watchosX64()
+//    watchosArm32()
+//    watchosArm64()
+//    tvosSimulatorArm64()
+//    tvosX64()
+//    tvosArm64()
+//
+//    // tier 3
+//    androidNativeArm32()
+//    androidNativeArm64()
+//    androidNativeX86()
+//    androidNativeX64()
+//    mingwX64()
+//    watchosDeviceArm64()
+//
+//    @OptIn(ExperimentalSwiftExportDsl::class)
+//    swiftExport {}
 
     sourceSets {
 
@@ -152,13 +150,13 @@ kotlin {
 
 }
 
-// skip tests which require XCode components to be installed
-tasks.named("tvosSimulatorArm64Test") { enabled = false }
-tasks.named("watchosSimulatorArm64Test") { enabled = false }
-// skip tests for which system environment variable retrival is not implemented at the moment
-tasks.named("wasmWasiNodeTest") { enabled = false }
-// skip tests which for some reason stale
-tasks.named("wasmJsBrowserTest") { enabled = false }
+//// skip tests which require XCode components to be installed
+//tasks.named("tvosSimulatorArm64Test") { enabled = false }
+//tasks.named("watchosSimulatorArm64Test") { enabled = false }
+//// skip tests for which system environment variable retrival is not implemented at the moment
+//tasks.named("wasmWasiNodeTest") { enabled = false }
+//// skip tests which for some reason stale
+//tasks.named("wasmJsBrowserTest") { enabled = false }
 
 tasks.withType<Test> {
     testLogging {
@@ -190,9 +188,15 @@ val javadocJar by tasks.registering(Jar::class) {
     from(tasks.dokkaGeneratePublicationHtml)
 }
 
+val stagingDeployDir = layout.buildDirectory.dir("staging-deploy").get().asFile
+
 publishing {
     repositories {
-        if (!isReleaseBuild) {
+        if (isReleaseBuild) {
+            maven {
+                url = stagingDeployDir.toURI()
+            }
+        } else {
             maven {
                 name = "GitHubPackages"
                 setUrl("https://maven.pkg.github.com/$githubAccount/${rootProject.name}")
@@ -206,49 +210,17 @@ publishing {
     publications {
         withType<MavenPublication> {
             artifact(javadocJar)
-            pom {
-                name = "xemantic-kotlin-test"
-                description = "The power-assert compatible assertions DSL and some other testing goodies - " +
-                        "a Kotlin multiplatform testing library."
-                url = "https://github.com/$githubAccount/${rootProject.name}"
-                inceptionYear = "2024"
-                organization {
-                    name = "Xemantic"
-                    url = "https://xemantic.com"
-                }
-                licenses {
-                    license {
-                        name = "The Apache Software License, Version 2.0"
-                        url = "http://www.apache.org/licenses/LICENSE-2.0.txt"
-                        distribution = "repo"
-                    }
-                }
-                scm {
-                    url = "https://github.com/$githubAccount/${rootProject.name}"
-                    connection = "scm:git:git:github.com/$githubAccount/${rootProject.name}.git"
-                    developerConnection = "scm:git:https://github.com/$githubAccount/${rootProject.name}.git"
-                }
-                ciManagement {
-                    system = "GitHub"
-                    url = "https://github.com/$githubAccount/${rootProject.name}/actions"
-                }
-                issueManagement {
-                    system = "GitHub"
-                    url = "https://github.com/$githubAccount/${rootProject.name}/issues"
-                }
-                developers {
-                    developer {
-                        id = "morisil"
-                        name = "Kazik Pogoda"
-                        email = "morisil@xemantic.com"
-                    }
-                }
-            }
+            pom { setUpPomDetails() }
         }
     }
 }
 
 if (isReleaseBuild) {
+
+    stagingDeployDir.mkdirs()
+
+    // fixes https://github.com/jreleaser/jreleaser/issues/1292
+    layout.buildDirectory.dir("jreleaser").get().asFile.mkdir()
 
     // workaround for KMP/gradle signing issue
     // https://github.com/gradle/gradle/issues/26091
@@ -284,15 +256,85 @@ if (isReleaseBuild) {
         sign(publishing.publications)
     }
 
-    nexusPublishing {
-        repositories {
-            sonatype {  //only for users registered in Sonatype after 24 Feb 2021
-                nexusUrl.set(uri("https://s01.oss.sonatype.org/service/local/"))
-                snapshotRepositoryUrl.set(uri("https://s01.oss.sonatype.org/content/repositories/snapshots/"))
-                username.set(sonatypeUser)
-                password.set(sonatypePassword)
+    jreleaser {
+//        project {
+//            description = "The power-assert compatible assertions DSL and some other testing goodies - " +
+//                    "a Kotlin multiplatform testing library."
+//            copyright = "(c) 2024 Xemantic"
+//        }
+        deploy {
+            maven {
+                mavenCentral {
+                    create("maven-central") {
+                        applyMavenCentralRules = false // Already checked
+                        active = Active.ALWAYS
+                        url = "https://central.sonatype.com/api/v1/publisher"
+                        maxRetries = 240
+                        stagingRepository(
+                            stagingDeployDir.path
+                        )
+                    }
+                }
+            }
+        }
+        release {
+            github {
+                // we are releasing through GitHub UI
+                skipRelease = true
+                skipTag = true
             }
         }
     }
 
+//    nexusPublishing {
+//        repositories {
+//            sonatype {  //only for users registered in Sonatype after 24 Feb 2021
+//                nexusUrl.set(uri("https://s01.oss.sonatype.org/service/local/"))
+//                snapshotRepositoryUrl.set(uri("https://s01.oss.sonatype.org/content/repositories/snapshots/"))
+//                username.set(sonatypeUser)
+//                password.set(sonatypePassword)
+//            }
+//        }
+//    }
+
+}
+
+
+fun MavenPom.setUpPomDetails() {
+    name = "xemantic-kotlin-test"
+    description = "The power-assert compatible assertions DSL and some other testing goodies - " +
+            "a Kotlin multiplatform testing library."
+    url = "https://github.com/$githubAccount/${rootProject.name}"
+    inceptionYear = "2024"
+    organization {
+        name = "Xemantic"
+        url = "https://xemantic.com"
+    }
+    licenses {
+        license {
+            name = "The Apache Software License, Version 2.0"
+            url = "http://www.apache.org/licenses/LICENSE-2.0.txt"
+            distribution = "repo"
+        }
+    }
+    scm {
+        url = "https://github.com/$githubAccount/${rootProject.name}"
+        connection = "scm:git:git:github.com/$githubAccount/${rootProject.name}.git"
+        developerConnection = "scm:git:https://github.com/$githubAccount/${rootProject.name}.git"
+    }
+    ciManagement {
+        system = "GitHub"
+        url = "https://github.com/$githubAccount/${rootProject.name}/actions"
+    }
+    issueManagement {
+        system = "GitHub"
+        url = "https://github.com/$githubAccount/${rootProject.name}/issues"
+    }
+    developers {
+        developer {
+            id = "morisil"
+            name = "Kazik Pogoda"
+            email = "morisil@xemantic.com"
+        }
+    }
 }
