@@ -41,6 +41,10 @@ jobs:
           JRELEASER_DEPLOY_MAVEN_MAVENCENTRAL_MAVEN_CENTRAL_PASSWORD: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
         run: ./gradlew -Pversion=$VERSION build sourcesJar dokkaGeneratePublicationHtml publish jreleaserDeploy
 
+      - name: List build/staging-deploy (only on failure)
+        if: failure()
+        run: ls -R build/staging-deploy
+
       - name: Display JReleaser trace.log (only on failure)
         if: failure()
         run: |
