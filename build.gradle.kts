@@ -6,6 +6,7 @@ import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
+import org.jetbrains.kotlin.gradle.swiftexport.ExperimentalSwiftExportDsl
 import org.jetbrains.kotlin.gradle.targets.js.testing.KotlinJsTest
 import org.jetbrains.kotlin.gradle.targets.jvm.tasks.KotlinJvmTest
 import org.jetbrains.kotlin.gradle.targets.native.tasks.KotlinNativeTest
@@ -101,53 +102,53 @@ kotlin {
         }
     }
 
-//    js {
-//        browser()
-//        nodejs()
-//        binaries.library()
-//    }
-//
-//    wasmJs {
-//        browser()
-//        nodejs()
-//        //d8()
-//        binaries.library()
-//    }
-//
-//    wasmWasi {
-//        nodejs()
-//        binaries.library()
-//    }
-//
-//    // native, see https://kotlinlang.org/docs/native-target-support.html
-//    // tier 1
-//    macosX64()
-//    macosArm64()
-//    iosSimulatorArm64()
-//    iosX64()
-//    iosArm64()
-//
-//    // tier 2
-//    linuxX64()
-//    linuxArm64()
-//    watchosSimulatorArm64()
-//    watchosX64()
-//    watchosArm32()
-//    watchosArm64()
-//    tvosSimulatorArm64()
-//    tvosX64()
-//    tvosArm64()
-//
-//    // tier 3
-//    androidNativeArm32()
-//    androidNativeArm64()
-//    androidNativeX86()
-//    androidNativeX64()
-//    mingwX64()
-//    watchosDeviceArm64()
-//
-//    @OptIn(ExperimentalSwiftExportDsl::class)
-//    swiftExport {}
+    js {
+        browser()
+        nodejs()
+        binaries.library()
+    }
+
+    wasmJs {
+        browser()
+        nodejs()
+        //d8()
+        binaries.library()
+    }
+
+    wasmWasi {
+        nodejs()
+        binaries.library()
+    }
+
+    // native, see https://kotlinlang.org/docs/native-target-support.html
+    // tier 1
+    macosX64()
+    macosArm64()
+    iosSimulatorArm64()
+    iosX64()
+    iosArm64()
+
+    // tier 2
+    linuxX64()
+    linuxArm64()
+    watchosSimulatorArm64()
+    watchosX64()
+    watchosArm32()
+    watchosArm64()
+    tvosSimulatorArm64()
+    tvosX64()
+    tvosArm64()
+
+    // tier 3
+    androidNativeArm32()
+    androidNativeArm64()
+    androidNativeX86()
+    androidNativeX64()
+    mingwX64()
+    watchosDeviceArm64()
+
+    @OptIn(ExperimentalSwiftExportDsl::class)
+    swiftExport {}
 
     sourceSets {
 
@@ -161,13 +162,13 @@ kotlin {
 
 }
 
-//// skip tests which require XCode components to be installed
-//tasks.named("tvosSimulatorArm64Test") { enabled = false }
-//tasks.named("watchosSimulatorArm64Test") { enabled = false }
-//// skip tests for which system environment variable retrival is not implemented at the moment
-//tasks.named("wasmWasiNodeTest") { enabled = false }
-//// skip tests which for some reason stale
-//tasks.named("wasmJsBrowserTest") { enabled = false }
+// skip tests which require XCode components to be installed
+tasks.named("tvosSimulatorArm64Test") { enabled = false }
+tasks.named("watchosSimulatorArm64Test") { enabled = false }
+// skip tests for which system environment variable retrival is not implemented at the moment
+tasks.named("wasmWasiNodeTest") { enabled = false }
+// skip tests which for some reason stale
+tasks.named("wasmJsBrowserTest") { enabled = false }
 
 tasks.withType<Test> {
     testLogging {
@@ -284,9 +285,7 @@ if (isReleaseBuild) {
                         active = Active.ALWAYS
                         url = "https://central.sonatype.com/api/v1/publisher"
                         maxRetries = 240
-                        stagingRepository(
-                            stagingDeployDir.path
-                        )
+                        stagingRepository(stagingDeployDir.path)
                     }
                 }
             }
@@ -300,19 +299,7 @@ if (isReleaseBuild) {
         }
     }
 
-//    nexusPublishing {
-//        repositories {
-//            sonatype {  //only for users registered in Sonatype after 24 Feb 2021
-//                nexusUrl.set(uri("https://s01.oss.sonatype.org/service/local/"))
-//                snapshotRepositoryUrl.set(uri("https://s01.oss.sonatype.org/content/repositories/snapshots/"))
-//                username.set(sonatypeUser)
-//                password.set(sonatypePassword)
-//            }
-//        }
-//    }
-
 }
-
 
 fun MavenPom.setUpPomDetails() {
     name = rootProject.name

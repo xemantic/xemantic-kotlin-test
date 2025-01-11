@@ -39,10 +39,9 @@ jobs:
           ORG_GRADLE_PROJECT_signingPassword: ${{ secrets.SIGNING_PASSWORD }}
           JRELEASER_DEPLOY_MAVEN_MAVENCENTRAL_MAVEN_CENTRAL_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
           JRELEASER_DEPLOY_MAVEN_MAVENCENTRAL_MAVEN_CENTRAL_PASSWORD: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
-          JRELEASER_GITHUB_TOKEN=empty: empty
         run: ./gradlew -Pversion=$VERSION build sourcesJar dokkaGeneratePublicationHtml publish jreleaserDeploy
 
-      - name: Display JReleaser trace.log
+      - name: Display JReleaser trace.log (only on failure)
         if: failure()
         run: |
           if [ -f build/jreleaser/trace.log ]; then
@@ -52,18 +51,19 @@ jobs:
             echo "trace.log file not found"
           fi
 
-      - name: Checkout main branch
+      - name: Checkout main branch (only if releasing from main)
         if: github.ref == 'refs/heads/main'
         uses: actions/checkout@v4.2.2
         with:
           ref: main
           fetch-depth: 0
 
-      - name: Update README
+      - name: Update README (only if releasing from main)
         if: github.ref == 'refs/heads/main'
         run: sh .github/scripts/update-readme-version.sh
 
-      - name: Create Pull Request
+      - name: Create Pull Request (only if releasing from main)
+        if: github.ref == 'refs/heads/main'
         uses: stefanzweifel/git-auto-commit-action@v5.0.1
         with:
           commit_message: Dependency version in README.md updated to ${{ env.VERSION }}
