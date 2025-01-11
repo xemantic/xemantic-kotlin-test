@@ -286,6 +286,10 @@ if (isReleaseBuild) {
                         url = "https://central.sonatype.com/api/v1/publisher"
                         maxRetries = 240
                         stagingRepository(stagingDeployDir.path)
+                        artifactOverride {
+                            // needed to publish klib next to jar
+                            jar = false
+                        }
                     }
                 }
             }
