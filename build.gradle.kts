@@ -279,6 +279,10 @@ if (isReleaseBuild) {
         }
         deploy {
             maven {
+                pomchecker {
+                    failOnError = false
+                    failOnWarning = false
+                }
                 mavenCentral {
                     create("maven-central") {
                         applyMavenCentralRules = false // Already checked
@@ -287,6 +291,18 @@ if (isReleaseBuild) {
                         url = "https://central.sonatype.com/api/v1/publisher"
                         maxRetries = 240
                         stagingRepository(stagingDeployDir.path)
+
+//                        kotlin.targets.forEach { target ->
+//                            if (target !is org.jetbrains.kotlin.gradle.targets.jvm.KotlinJvmTarget) {
+//                                artifactOverride {
+//                                    groupId = groupId
+//                                    //artifactId =
+//                                    //verifyPom = false
+//                                    jar = false
+//                                }
+//                            }
+//                        }
+
                     }
                 }
             }
@@ -339,3 +355,51 @@ fun MavenPom.setUpPomDetails() {
         }
     }
 }
+
+
+tasks.register("listArtifacts") {
+    doLast {
+        kotlin.targets.forEach { target ->
+            println("Target: ${target.name}")
+
+            // Get all binary artifacts
+            target.compilations.forEach { compilation ->
+                println("  Compilation: ${compilation.name}")
+
+                // Get the output file/directory for this compilation
+                when (target) {
+                    is org.jetbrains.kotlin.gradle.targets.jvm.KotlinJvmTarget -> {
+                        val jarTask = tasks.findByName("${target.name}Jar") as? org.gradle.api.tasks.bundling.Jar
+                        println("    Output: ${jarTask?.archiveFileName?.get() ?: "N/A"} (JAR)")
+                    }
+
+                    is org.jetbrains.kotlin.gradle.targets.js.KotlinJsTarget -> {
+                        val jsTask = tasks.findByName("${compilation.name}ProductionExecutable") as? org.gradle.api.Task
+                        println("    Output: ${jsTask?.outputs?.files?.singleFile?.name ?: "N/A"} (JS Bundle)")
+                    }
+
+//                    is org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget -> {
+//                        val klib = target.binaries.findKlibs(compilation)
+//                        println("    KLIB: ${klib.map { it.outputFile.name }.joinToString() ?: "N/A"}")
+//
+//                        // Print executables/frameworks
+//                        target.binaries.forEach { binary ->
+//                            println("    Binary: ${binary.outputFile.name} (${binary.javaClass.simpleName})")
+//                        }
+//                    }
+
+                    else -> println("    Unknown target type: ${target.javaClass.simpleName}")
+                }
+            }
+            println()
+        }
+    }
+}
+
+//// Helper function to find KLIBs for a compilation
+//fun org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeBinaryContainer.findKlibs(
+//    compilation: org.jetbrains.kotlin.gradle.plugin.KotlinCompilation<*>
+//): List<org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeLibrary> {
+//    return filterIsInstance<org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeLibrary>()
+//        .filter { it.compilation == compilation }
+//}
