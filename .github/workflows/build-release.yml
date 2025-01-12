@@ -68,7 +68,7 @@ jobs:
 
       - name: Create Pull Request (only if releasing from main)
         if: github.ref == 'refs/heads/main'
-        uses: stefanzweifel/git-auto-commit-action@v5.0.1
+        uses: stefanzweifel/git-auto-commit-action@v5.1.0
         with:
           commit_message: Dependency version in README.md updated to ${{ env.VERSION }}
           file_pattern: 'README.md'
