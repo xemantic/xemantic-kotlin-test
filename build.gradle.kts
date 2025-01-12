@@ -8,6 +8,7 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 import org.jetbrains.kotlin.gradle.swiftexport.ExperimentalSwiftExportDsl
 import org.jetbrains.kotlin.gradle.targets.js.testing.KotlinJsTest
+import org.jetbrains.kotlin.gradle.targets.jvm.KotlinJvmTarget
 import org.jetbrains.kotlin.gradle.targets.jvm.tasks.KotlinJvmTest
 import org.jetbrains.kotlin.gradle.targets.native.tasks.KotlinNativeTest
 import org.jreleaser.model.Active
@@ -292,6 +293,15 @@ if (isReleaseBuild) {
                         maxRetries = 240
                         stagingRepository(stagingDeployDir.path)
 
+                        kotlin.targets.forEach { target ->
+                            if (target !is KotlinJvmTarget) {
+                                artifactOverride {
+                                    artifactId = "${project.name}-${target.name.lowercase()}"
+                                    jar = false
+                                    verifyPom = false
+                                }
+                            }
+                        }
 //                        kotlin.targets.forEach { target ->
 //                            if (target !is org.jetbrains.kotlin.gradle.targets.jvm.KotlinJvmTarget) {
 //                                artifactOverride {
@@ -360,38 +370,10 @@ fun MavenPom.setUpPomDetails() {
 tasks.register("listArtifacts") {
     doLast {
         kotlin.targets.forEach { target ->
-            println("Target: ${target.name}")
-
-            // Get all binary artifacts
-            target.compilations.forEach { compilation ->
-                println("  Compilation: ${compilation.name}")
-
-                // Get the output file/directory for this compilation
-                when (target) {
-                    is org.jetbrains.kotlin.gradle.targets.jvm.KotlinJvmTarget -> {
-                        val jarTask = tasks.findByName("${target.name}Jar") as? org.gradle.api.tasks.bundling.Jar
-                        println("    Output: ${jarTask?.archiveFileName?.get() ?: "N/A"} (JAR)")
-                    }
-
-                    is org.jetbrains.kotlin.gradle.targets.js.KotlinJsTarget -> {
-                        val jsTask = tasks.findByName("${compilation.name}ProductionExecutable") as? org.gradle.api.Task
-                        println("    Output: ${jsTask?.outputs?.files?.singleFile?.name ?: "N/A"} (JS Bundle)")
-                    }
-
-//                    is org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget -> {
-//                        val klib = target.binaries.findKlibs(compilation)
-//                        println("    KLIB: ${klib.map { it.outputFile.name }.joinToString() ?: "N/A"}")
-//
-//                        // Print executables/frameworks
-//                        target.binaries.forEach { binary ->
-//                            println("    Binary: ${binary.outputFile.name} (${binary.javaClass.simpleName})")
-//                        }
-//                    }
-
-                    else -> println("    Unknown target type: ${target.javaClass.simpleName}")
-                }
+            if (target !is KotlinJvmTarget) {
+                val name = "${project.name}-${target.name.lowercase()}-${version}"
+                println(name)
             }
-            println()
         }
     }
 }
