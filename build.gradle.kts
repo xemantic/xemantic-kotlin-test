@@ -282,8 +282,9 @@ if (isReleaseBuild) {
         deploy {
             maven {
 //                pomchecker {
-//                    failOnError = false
-//                    failOnWarning = false
+////                    failOnError = false
+////                    failOnWarning = false
+//                    strict = false
 //                }
                 mavenCentral {
                     create("maven-central") {
