@@ -281,23 +281,13 @@ if (isReleaseBuild) {
         }
         deploy {
             maven {
-//                pomchecker {
-////                    failOnError = false
-////                    failOnWarning = false
-//                    strict = false
-//                }
                 mavenCentral {
                     create("maven-central") {
-                        applyMavenCentralRules.set(false)// // Already checked
-                        verifyPom.set(false)
-                        javadocJar.set(false)
-                        sourceJar.set(false)
                         active = Active.ALWAYS
                         url = "https://central.sonatype.com/api/v1/publisher"
+                        applyMavenCentralRules = false
                         maxRetries = 240
                         stagingRepository(stagingDeployDir.path)
-
-
                         kotlin.targets.forEach { target ->
                             if (target !is KotlinJvmTarget) {
                                 val nonJarArtifactId = if (target.platformType == KotlinPlatformType.wasm) {
@@ -307,26 +297,13 @@ if (isReleaseBuild) {
                                 }
                                 artifactOverride {
                                     artifactId = nonJarArtifactId
-                                    jar.set(false)
-                                    verifyPom.set(false)
-                                    sourceJar.set(false)
-                                    javadocJar.set(false)
+                                    jar = false
+                                    verifyPom = false
+                                    sourceJar = false
+                                    javadocJar = false
                                 }
                             }
                         }
-
-                        println(this@create)
-//                        kotlin.targets.forEach { target ->
-//                            if (target !is org.jetbrains.kotlin.gradle.targets.jvm.KotlinJvmTarget) {
-//                                artifactOverride {
-//                                    groupId = groupId
-//                                    //artifactId =
-//                                    //verifyPom = false
-//                                    jar = false
-//                                }
-//                            }
-//                        }
-
                     }
                 }
             }
@@ -379,26 +356,3 @@ fun MavenPom.setUpPomDetails() {
         }
     }
 }
-
-tasks.register("listArtifacts") {
-    doLast {
-        kotlin.targets.forEach { target ->
-            if (target !is KotlinJvmTarget) {
-                val nonJarArtifactId = if (target.platformType == KotlinPlatformType.wasm) {
-                    "${name}-wasm-${target.name.lowercase().substringAfter("wasm")}"
-                } else {
-                    "${name}-${target.name.lowercase()}"
-                }
-                println(nonJarArtifactId)
-            }
-        }
-    }
-}
-
-//// Helper function to find KLIBs for a compilation
-//fun org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeBinaryContainer.findKlibs(
-//    compilation: org.jetbrains.kotlin.gradle.plugin.KotlinCompilation<*>
-//): List<org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeLibrary> {
-//    return filterIsInstance<org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeLibrary>()
-//        .filter { it.compilation == compilation }
-//}
