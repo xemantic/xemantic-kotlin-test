@@ -295,8 +295,10 @@ if (isReleaseBuild) {
 
                         kotlin.targets.forEach { target ->
                             if (target !is KotlinJvmTarget) {
+                                val nonJarArtifactId = "${project.name}-${target.name.lowercase()}"
+                                println("!!!!artifactId: $nonJarArtifactId")
                                 artifactOverride {
-                                    artifactId = "${project.name}-${target.name.lowercase()}-${version}"
+                                    artifactId = nonJarArtifactId
                                     jar = false
                                     verifyPom = false
                                 }
