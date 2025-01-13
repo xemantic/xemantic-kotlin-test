@@ -281,10 +281,10 @@ if (isReleaseBuild) {
         }
         deploy {
             maven {
-                pomchecker {
-                    failOnError = false
-                    failOnWarning = false
-                }
+//                pomchecker {
+//                    failOnError = false
+//                    failOnWarning = false
+//                }
                 mavenCentral {
                     create("maven-central") {
                         applyMavenCentralRules.set(false)// // Already checked
