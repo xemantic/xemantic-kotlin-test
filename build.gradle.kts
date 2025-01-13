@@ -295,7 +295,7 @@ if (isReleaseBuild) {
 
                         kotlin.targets.forEach { target ->
                             if (target !is KotlinJvmTarget) {
-                                val nonJarArtifactId = "${project.name}-${target.name.lowercase()}"
+                                val nonJarArtifactId = "${name}-${target.name.lowercase()}"
                                 println("!!!!artifactId: $nonJarArtifactId")
                                 artifactOverride {
                                     artifactId = nonJarArtifactId
