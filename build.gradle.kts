@@ -296,7 +296,7 @@ if (isReleaseBuild) {
                         kotlin.targets.forEach { target ->
                             if (target !is KotlinJvmTarget) {
                                 artifactOverride {
-                                    artifactId = "${project.name}-${target.name.lowercase()}"
+                                    artifactId = "${project.name}-${target.name.lowercase()}-${version}"
                                     jar = false
                                     verifyPom = false
                                 }
