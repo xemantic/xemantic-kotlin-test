@@ -293,17 +293,21 @@ if (isReleaseBuild) {
                         maxRetries = 240
                         stagingRepository(stagingDeployDir.path)
 
+
                         kotlin.targets.forEach { target ->
                             if (target !is KotlinJvmTarget) {
                                 val nonJarArtifactId = "${name}-${target.name.lowercase()}"
-                                println("!!!!artifactId: $nonJarArtifactId")
                                 artifactOverride {
                                     artifactId = nonJarArtifactId
                                     jar = false
                                     verifyPom = false
+                                    sourceJar = false
+                                    javadocJar = false
                                 }
                             }
                         }
+
+                        println(this@create)
 //                        kotlin.targets.forEach { target ->
 //                            if (target !is org.jetbrains.kotlin.gradle.targets.jvm.KotlinJvmTarget) {
 //                                artifactOverride {
