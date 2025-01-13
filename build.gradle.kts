@@ -6,6 +6,7 @@ import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
+import org.jetbrains.kotlin.gradle.plugin.KotlinPlatformType
 import org.jetbrains.kotlin.gradle.swiftexport.ExperimentalSwiftExportDsl
 import org.jetbrains.kotlin.gradle.targets.js.testing.KotlinJsTest
 import org.jetbrains.kotlin.gradle.targets.jvm.KotlinJvmTarget
@@ -298,7 +299,11 @@ if (isReleaseBuild) {
 
                         kotlin.targets.forEach { target ->
                             if (target !is KotlinJvmTarget) {
-                                val nonJarArtifactId = "${name}-${target.name.lowercase()}"
+                                val nonJarArtifactId = if (target.platformType == KotlinPlatformType.wasm) {
+                                    "${name}-wasm-${target.name.lowercase().substringAfter("wasm")}"
+                                } else {
+                                    "${name}-${target.name.lowercase()}"
+                                }
                                 artifactOverride {
                                     artifactId = nonJarArtifactId
                                     jar.set(false)
@@ -374,13 +379,16 @@ fun MavenPom.setUpPomDetails() {
     }
 }
 
-
 tasks.register("listArtifacts") {
     doLast {
         kotlin.targets.forEach { target ->
             if (target !is KotlinJvmTarget) {
-                val name = "${project.name}-${target.name.lowercase()}-${version}"
-                println(name)
+                val nonJarArtifactId = if (target.platformType == KotlinPlatformType.wasm) {
+                    "${name}-wasm-${target.name.lowercase().substringAfter("wasm")}"
+                } else {
+                    "${name}-${target.name.lowercase()}"
+                }
+                println(nonJarArtifactId)
             }
         }
     }
