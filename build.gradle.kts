@@ -286,8 +286,10 @@ if (isReleaseBuild) {
                 }
                 mavenCentral {
                     create("maven-central") {
-                        applyMavenCentralRules = false // Already checked
-                        verifyPom = false
+                        applyMavenCentralRules.set(false)// // Already checked
+                        verifyPom.set(false)
+                        javadocJar.set(false)
+                        sourceJar.set(false)
                         active = Active.ALWAYS
                         url = "https://central.sonatype.com/api/v1/publisher"
                         maxRetries = 240
@@ -299,10 +301,10 @@ if (isReleaseBuild) {
                                 val nonJarArtifactId = "${name}-${target.name.lowercase()}"
                                 artifactOverride {
                                     artifactId = nonJarArtifactId
-                                    jar = false
-                                    verifyPom = false
-                                    sourceJar = false
-                                    javadocJar = false
+                                    jar.set(false)
+                                    verifyPom.set(false)
+                                    sourceJar.set(false)
+                                    javadocJar.set(false)
                                 }
                             }
                         }
