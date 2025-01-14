@@ -339,6 +339,7 @@ if (isReleaseBuild) {
                 create("discord") {
                     active = Active.ALWAYS
                     message = releaseAnnouncement
+                    structuredMessage = false
                 }
             }
         }
