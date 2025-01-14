@@ -247,6 +247,10 @@ if (isReleaseBuild) {
         mustRunAfter("publish")
     }
 
+    tasks.named("jreleaserAnnounce").configure {
+        mustRunAfter("jreleaserDeploy")
+    }
+
     stagingDeployDir.mkdirs()
 
     // fixes https://github.com/jreleaser/jreleaser/issues/1292
@@ -340,6 +344,7 @@ if (isReleaseBuild) {
                     active = Active.ALWAYS
                     message = releaseAnnouncement
                     messageProperty = "content"
+                    structuredMessage = true
                 }
             }
         }
