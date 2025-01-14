@@ -14,6 +14,7 @@ import org.jetbrains.kotlin.gradle.targets.jvm.tasks.KotlinJvmTest
 import org.jetbrains.kotlin.gradle.targets.native.tasks.KotlinNativeTest
 import org.jreleaser.model.Active
 import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
@@ -164,23 +165,22 @@ kotlin {
 
 }
 
-// skip tests which require XCode components to be installed
-tasks.named("tvosSimulatorArm64Test") { enabled = false }
-tasks.named("watchosSimulatorArm64Test") { enabled = false }
-// skip tests for which system environment variable retrival is not implemented at the moment
-tasks.named("wasmWasiNodeTest") { enabled = false }
-// skip tests which for some reason stale
-tasks.named("wasmJsBrowserTest") { enabled = false }
+tasks {
 
-tasks.withType<Test> {
-    testLogging {
-        events(
-            TestLogEvent.SKIPPED,
-            TestLogEvent.FAILED
-        )
-        showStackTraces = true
-        exceptionFormat = TestExceptionFormat.FULL
+    withType<Jar> {
+        populateJarManifest(vendor = "Xemantic")
     }
+
+    withType<Test> {
+        xemanticTestLogging()
+    }
+
+    // skip tests which require XCode components to be installed
+    named("tvosSimulatorArm64Test") { enabled = false }
+    named("watchosSimulatorArm64Test") { enabled = false }
+    // skip tests for which system environment variable retrival is not implemented at the moment
+    named("wasmWasiNodeTest") { enabled = false }
+
 }
 
 powerAssert {
@@ -189,6 +189,17 @@ powerAssert {
         "com.xemantic.kotlin.test.have"
     )
 }
+
+val releasePageUrl = "https://github.com/xemantic/xemantic-kotlin-test/releases/tag/$version"
+
+val releaseAnnouncement = """
+🚀 ${rootProject.name} $version has been released!
+
+See release page and changelog:
+$releasePageUrl
+
+${settings.description}
+"""
 
 // https://kotlinlang.org/docs/dokka-migration.html#adjust-configuration-options
 dokka {
@@ -315,6 +326,14 @@ if (isReleaseBuild) {
                 skipTag = true
             }
         }
+        announce {
+            webhooks {
+                create("discord") {
+                    active = Active.ALWAYS
+                    message = releaseAnnouncement
+                }
+            }
+        }
     }
 
 }
@@ -354,5 +373,37 @@ fun MavenPom.setUpPomDetails() {
             name = "Kazik Pogoda"
             email = "morisil@xemantic.com"
         }
+    }
+}
+
+fun Jar.populateJarManifest(
+    vendor: String
+) {
+    manifest {
+        attributes(
+            mapOf(
+                "Implementation-Title" to project.name,
+                "Implementation-Version" to project.version,
+                "Implementation-Vendor" to vendor,
+                "Built-By" to "Gradle ${gradle.gradleVersion}",
+                "Built-Date" to LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+            )
+        )
+    }
+    metaInf {
+        from(rootProject.rootDir) {
+            include("LICENSE")
+        }
+    }
+}
+
+fun Test.xemanticTestLogging() {
+    testLogging {
+        events(
+            TestLogEvent.SKIPPED,
+            TestLogEvent.FAILED
+        )
+        showStackTraces = true
+        exceptionFormat = TestExceptionFormat.FULL
     }
 }
