@@ -197,7 +197,6 @@ val releasePageUrl = "https://github.com/xemantic/xemantic-kotlin-test/releases/
 val releaseAnnouncement = """
 🚀 ${rootProject.name} $version has been released!
 
-See release page and changelog:
 $releasePageUrl
 
 ${settings.description}
@@ -291,6 +290,12 @@ if (isReleaseBuild) {
         project {
             description = settings.description
             copyright = settings.copyright
+            license = "Apache-2.0"
+            links {
+                homepage = "https://github.com/xemantic/xemantic-kotlin-test"
+                documentation = "https://github.com/xemantic/xemantic-kotlin-test"
+            }
+            authors.set(listOf("morisil"))
         }
         deploy {
             maven {
@@ -326,6 +331,7 @@ if (isReleaseBuild) {
                 // we are releasing through GitHub UI
                 skipRelease = true
                 skipTag = true
+                token = "empty"
             }
         }
         announce {
