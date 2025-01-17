@@ -16,23 +16,33 @@
 
 package com.xemantic.kotlin.test.compare
 
+import com.xemantic.kotlin.test.assert
 import kotlin.test.Test
-import kotlin.test.assertFailsWith
-import kotlin.test.assertNotNull
 import kotlin.test.fail
 
 class TextComparisonTest {
 
     @Test
     fun `should pass if strings are the same`() {
-        "foo" shouldEqual "foo"
+        assert(("foo" diff "foo").isEmpty())
+    }
+
+    /**
+     * This test case shows the LLM how to interpret trailing whitespaces in multiline strings in Kotlin.
+     * Basically the top and bottom triple quotes are discarded.
+     */
+    @Test
+    fun `should pass if multiline string is the same as simple string`() {
+        assert(("""
+            foo
+        """.trimIndent() diff "foo").isEmpty())
     }
 
     @Test
-    fun `should report if strings are different`() = assertErrorMessage(
-        actual = "foo",
-        expected = "bar",
-        expectedMessage = """
+    fun `should report if strings are different`() = assertDifference(
+        text1 = "foo",
+        text2 = "bar",
+        difference = """
             Text comparison failed:
             ┌─ actual
             │ foo
@@ -47,8 +57,8 @@ class TextComparisonTest {
     )
 
     @Test
-    fun `should fail if multiline strings are different`() = assertErrorMessage(
-        actual = """
+    fun `should fail if multiline strings are different`() = assertDifference(
+        text1 = """
             # Heading
 
             This is a paragraph
@@ -57,7 +67,7 @@ class TextComparisonTest {
             * List item 1
             * List item 2
         """.trimIndent(),
-        expected = """
+        text2 = """
             # Heading
 
             This is paragraph
@@ -66,7 +76,7 @@ class TextComparisonTest {
             * List item 1
             * List item three
         """.trimIndent(),
-        expectedMessage = """
+        difference = """
             Text comparison failed:
             ┌─ actual
             │ # Heading
@@ -95,18 +105,18 @@ class TextComparisonTest {
     )
 
     @Test
-    fun `should fail even if only whitespaces are different`() = assertErrorMessage(
-        actual = """
+    fun `should fail even if only whitespaces are different`() = assertDifference(
+        text1 = """
             <div>
                 <p>Hello</p>
             </div>
         """.trimIndent(),
-        expected = """
+        text2 = """
             <div>
                <p>Hello</p>
             </div>
         """.trimIndent(),
-        expectedMessage = """
+        difference = """
             Text comparison failed:
             ┌─ actual
             │ <div>
@@ -125,21 +135,21 @@ class TextComparisonTest {
     )
 
     @Test
-    fun `should show differences in trailing whitespace`() = assertErrorMessage(
-        actual = """
+    fun `should show differences in trailing whitespace`() = assertDifference(
+        text1 = """
             Line with no space
             Line with one space 
             Line with two spaces  
             No newline at the end
         """.trimIndent(),
-        expected = """
+        text2 = """
             Line with no space
             Line with one space
             Line with two spaces
             No newline at the end
             
         """.trimIndent(),
-        expectedMessage = """
+        difference = """
             Text comparison failed:
             ┌─ actual
             │ Line with no space
@@ -161,8 +171,8 @@ class TextComparisonTest {
     )
 
     @Test
-    fun `should handle complex differences`() = assertErrorMessage(
-        actual = """
+    fun `should handle complex differences`() = assertDifference(
+        text1 = """
             <!DOCTYPE html>
             <html>
               <head>
@@ -176,7 +186,7 @@ class TextComparisonTest {
               </body>
             </html>
         """.trimIndent(),
-        expected = """
+        text2 = """
             <!DOCTYPE html>
             <html>
               <head>
@@ -191,7 +201,7 @@ class TextComparisonTest {
               </body>
             </html>
         """.trimIndent(),
-        expectedMessage = """
+        difference = """
             Text comparison failed:
             ┌─ actual
             │ <!DOCTYPE html>
@@ -231,8 +241,8 @@ class TextComparisonTest {
     )
 
     @Test
-    fun `should handle differences in markdown content`() = assertErrorMessage(
-        actual = """
+    fun `should handle differences in markdown content`() = assertDifference(
+        text1 = """
             # Main Heading
 
             ## Sub-heading
@@ -253,7 +263,7 @@ class TextComparisonTest {
             }
             ```
         """.trimIndent(),
-        expected = """
+        text2 = """
             # Main Heading
 
             ## Sub-heading
@@ -274,7 +284,7 @@ class TextComparisonTest {
             }
             ```
         """.trimIndent(),
-        expectedMessage = """
+        difference = """
             Text comparison failed:
             ┌─ actual
             │ # Main Heading
@@ -328,12 +338,11 @@ class TextComparisonTest {
         """.trimIndent()
     )
 
-    private fun assertErrorMessage(actual: String, expected: String, expectedMessage: String) {
-        val error = assertFailsWith<AssertionError> {
-            actual shouldEqual expected
+    private fun assertDifference(text1: String, text2: String, difference: String) {
+        val diff = text1 diff text2
+        if (diff.isNotEmpty()) {
+            fail("The actual difference message was:\n${diff}")
         }
-        assertNotNull(error.message)
-        fail("The actual error message was:\n${error.message}")
     }
 
 }
