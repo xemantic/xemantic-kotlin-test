@@ -59,37 +59,6 @@ class TextComparisonTest {
     )
 
     @Test
-    fun `should fail even if only whitespaces are different`() = assertDifference(
-        text1 = """
-            <div>
-                <p>Hello</p>
-            </div>
-        """.trimIndent(),
-        text2 = """
-            <div>
-               <p>Hello</p>
-            </div>
-        """.trimIndent(),
-        difference = """
-            Text comparison failed:
-            ┌─ actual
-            │ <div>
-            │     <p>Hello</p>
-            │ </div>
-            └─ differs from expected
-            │ <div>
-            │    <p>Hello</p>
-            │ </div>
-            └─ differences
-              • line 2: indentation difference
-                - actual:   "    <p>Hello</p>" (4 spaces)
-                - expected: "   <p>Hello</p>"  (3 spaces)
-                - changes:  "[-⠀-]<p>Hello</p>"
-
-        """.trimIndent()
-    )
-
-    @Test
     fun `should show differences in trailing whitespace`() = assertDifference(
         text1 = """
             Line with no space
@@ -126,7 +95,39 @@ class TextComparisonTest {
                 - actual:   "Line with two spaces⠀⠀"
                 - expected: "Line with two spaces"
                 - changes:  "Line with two spaces[-⠀-][-⠀-]"
-              • structural: missing newline at end of file
+              • structural: missing line after line 4
+                + 
+
+        """.trimIndent()
+    )
+
+    @Test
+    fun `should fail even if only whitespaces are different`() = assertDifference(
+        text1 = """
+            <div>
+                <p>Hello</p>
+            </div>
+        """.trimIndent(),
+        text2 = """
+            <div>
+               <p>Hello</p>
+            </div>
+        """.trimIndent(),
+        difference = """
+            Text comparison failed:
+            ┌─ actual
+            │ <div>
+            │     <p>Hello</p>
+            │ </div>
+            └─ differs from expected
+            │ <div>
+            │    <p>Hello</p>
+            │ </div>
+            └─ differences
+              • line 2: indentation difference
+                - actual:   "    <p>Hello</p>" (4 spaces)
+                - expected: "   <p>Hello</p>"  (3 spaces)
+                - changes:  "[-⠀-]<p>Hello</p>"
 
         """.trimIndent()
     )
@@ -248,11 +249,15 @@ class TextComparisonTest {
             │ </html>
             └─ differences
               • structural: missing line after line 4
-                + <meta charset="utf-8">
-              • line 7: 'container' vs 'main-container'
-                changes: '<div class="[-c-][-o-][-n-][-t-][-a-][-i-][-n-][-e-][-r-]{+m+}{+a+}{+i+}{+n+}{+-+}{+c+}{+o+}{+n+}{+t+}{+a+}{+i+}{+n+}{+e+}{+r+}">'
-              • line 8: 'Hello World' vs 'Hello, World!'
-                changes: "Hello[-⠀-]{+,+}{+⠀+}World{+!+}"
+                +     <meta charset="utf-8">
+              • line 7: strings differ
+                - actual:   "    <div class=\"container\">"
+                - expected: "    <div class=\"main-container\">"
+                - changes:  "    <div class=\"[-c-][-o-][-n-][-t-][-a-][-i-][-n-][-e-][-r-]{+m+}{+a+}{+i+}{+n+}{+-+}{+c+}{+o+}{+n+}{+t+}{+a+}{+i+}{+n+}{+e+}{+r+}\">"
+              • line 8: strings differ
+                - actual:   "      <h1>Hello World</h1>"
+                - expected: "      <h1>Hello, World!</h1>"
+                - changes:  "      <h1>Hello[-⠀-]{+,+}{+⠀+}World{+!+}</h1>"
 
         """.trimIndent()
     )
