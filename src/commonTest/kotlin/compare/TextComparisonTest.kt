@@ -18,6 +18,7 @@ package com.xemantic.kotlin.test.compare
 
 import com.xemantic.kotlin.test.assert
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.fail
 
 class TextComparisonTest {
@@ -52,7 +53,7 @@ class TextComparisonTest {
               • line 1: strings differ
                 - actual:   "foo"
                 - expected: "bar"
-                - changes:  "[-f-o-o-]{+b+a+r+}"
+                - changes:  "[-f-]{+b+}[-o-]{+a+}[-o-]{+r+}"
         """.trimIndent()
     )
 
@@ -96,11 +97,11 @@ class TextComparisonTest {
             │ * List item three
             └─ differences
               • line 3: "This is a paragraph" vs "This is paragraph"
-                changes: "This is {+a +}paragraph"
+                changes: "This is [-a-][ -]paragraph"
               • line 4: "with two lines." vs "with 2 lines."
-                changes: "with [-two-]{+2+} lines."
+                changes: "with [-t-][-w-][-o-]{+2+} lines."
               • line 7: "* List item 2" vs "* List item three"
-                changes: "* List item [-2-]{+three+}"
+                changes: "* List item [-2-]{+t+}{+h+}{+r+}{+e+}{+e+}"
         """.trimIndent()
     )
 
@@ -130,7 +131,7 @@ class TextComparisonTest {
               • line 2: indentation difference
                 - actual:   "    <p>Hello</p>" (4 spaces)
                 - expected: "   <p>Hello</p>"  (3 spaces)
-                - changes:  "{+ +}<p>Hello</p>"
+                - changes:  "    <p>Hello</p>[-⠀-]"
         """.trimIndent()
     )
 
@@ -164,7 +165,9 @@ class TextComparisonTest {
             │ 
             └─ differences
               • line 2: trailing whitespace difference
+                changes: "Line with one space{+⠀+}"
               • line 3: trailing whitespace difference
+                changes: "Line with two spaces{+⠀+}{+⠀+}"
               • structural: missing newline at end of file
             Note: ⠀ represents a space character
         """.trimIndent()
@@ -234,9 +237,9 @@ class TextComparisonTest {
               • structural: missing line after line 4
                 + <meta charset="utf-8">
               • line 7: 'container' vs 'main-container'
-                changes: '<div class="[-container-]{+main-container+}">'
+                changes: '<div class="[-c-][-o-][-n-][-t-][-a-][-i-][-n-][-e-][-r-]{+m+}{+a+}{+i+}{+n+}{+-+}{+c+}{+o+}{+n+}{+t+}{+a+}{+i+}{+n+}{+e+}{+r+}">'
               • line 8: 'Hello World' vs 'Hello, World!'
-                changes: 'Hello[- -]{+,+} World{+!+}'
+                changes: "Hello[-⠀-]{+,+}{+⠀+}World{+!+}"
         """.trimIndent()
     )
 
@@ -330,16 +333,17 @@ class TextComparisonTest {
               • line 5: characters differ
                 changes: "This is a paragraph with [-*-]{+_+}italic[-*-]{+_+} and"
               • line 6: characters differ
-                changes: "[-**-]{+__+}bold[-**-]{+__+} text. It continues on the"
+                changes: "[-*-][-*-]{+_+}{+_+}bold[-*-][-*-]{+_+}{+_+} text. It continues on the"
               • line 12: missing period at end of line
                 changes: "> with multiple lines{+.+}"
               • line 16: indentation and missing semicolon
-                changes: "[-    -]{+  +}println("Hello"){+;+}"
+                changes: "[-⠀-][-⠀-][-⠀-][-⠀-]println("Hello"){+;+}"
         """.trimIndent()
     )
 
     private fun assertDifference(text1: String, text2: String, difference: String) {
         val diff = text1 diff text2
+        assertEquals(expected = difference, actual = diff)
         if (diff.isNotEmpty()) {
             fail("The actual difference message was:\n${diff}")
         }
