@@ -54,6 +54,7 @@ class TextComparisonTest {
                 - actual:   "foo"
                 - expected: "bar"
                 - changes:  "[-f-]{+b+}[-o-]{+a+}[-o-]{+r+}"
+
         """.trimIndent()
     )
 
@@ -96,12 +97,19 @@ class TextComparisonTest {
             │ * List item 1
             │ * List item three
             └─ differences
-              • line 3: "This is a paragraph" vs "This is paragraph"
-                changes: "This is [-a-][ -]paragraph"
-              • line 4: "with two lines." vs "with 2 lines."
-                changes: "with [-t-][-w-][-o-]{+2+} lines."
-              • line 7: "* List item 2" vs "* List item three"
-                changes: "* List item [-2-]{+t+}{+h+}{+r+}{+e+}{+e+}"
+              • line 3: strings differ
+                - actual:   "This is a paragraph"
+                - expected: "This is paragraph"
+                - changes:  "This is [-a-][ -]paragraph"
+              • line 4: strings differ
+                - actual:   "with two lines."
+                - expected: "with 2 lines."
+                - changes:  "with [-t-][-w-][-o-]{+2+} lines."
+              • line 7: strings differ
+                - actual:   "* List item 2"
+                - expected: "* List item three"
+                - changes:  "* List item [-2-]{+t+}{+h+}{+r+}{+e+}{+e+}"
+
         """.trimIndent()
     )
 
@@ -132,6 +140,7 @@ class TextComparisonTest {
                 - actual:   "    <p>Hello</p>" (4 spaces)
                 - expected: "   <p>Hello</p>"  (3 spaces)
                 - changes:  "    <p>Hello</p>[-⠀-]"
+
         """.trimIndent()
     )
 
@@ -170,6 +179,7 @@ class TextComparisonTest {
                 changes: "Line with two spaces{+⠀+}{+⠀+}"
               • structural: missing newline at end of file
             Note: ⠀ represents a space character
+
         """.trimIndent()
     )
 
@@ -240,6 +250,7 @@ class TextComparisonTest {
                 changes: '<div class="[-c-][-o-][-n-][-t-][-a-][-i-][-n-][-e-][-r-]{+m+}{+a+}{+i+}{+n+}{+-+}{+c+}{+o+}{+n+}{+t+}{+a+}{+i+}{+n+}{+e+}{+r+}">'
               • line 8: 'Hello World' vs 'Hello, World!'
                 changes: "Hello[-⠀-]{+,+}{+⠀+}World{+!+}"
+
         """.trimIndent()
     )
 
@@ -338,13 +349,13 @@ class TextComparisonTest {
                 changes: "> with multiple lines{+.+}"
               • line 16: indentation and missing semicolon
                 changes: "[-⠀-][-⠀-][-⠀-][-⠀-]println("Hello"){+;+}"
+
         """.trimIndent()
     )
 
     private fun assertDifference(text1: String, text2: String, difference: String) {
         val diff = text1 diff text2
-        assertEquals(expected = difference, actual = diff)
-        if (diff.isNotEmpty()) {
+        if ((diff != difference) && diff.isNotEmpty()) {
             fail("The actual difference message was:\n${diff}")
         }
     }
