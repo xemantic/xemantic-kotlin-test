@@ -355,6 +355,7 @@ class TextComparisonTest {
 
     private fun assertDifference(text1: String, text2: String, difference: String) {
         val diff = text1 diff text2
+        assertEquals(difference, diff)
         if ((diff != difference) && diff.isNotEmpty()) {
             fail("The actual difference message was:\n${diff}")
         }

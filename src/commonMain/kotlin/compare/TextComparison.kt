@@ -74,31 +74,52 @@ private fun diffLine(line1: String, line2: String): String {
     var i = 0
     var j = 0
     
+    // Buffers for grouping consecutive changes
+    val deletions = StringBuilder()
+    val additions = StringBuilder()
+    
+    fun flushChanges() {
+        if (deletions.isNotEmpty()) {
+            builder.append("[-${deletions}-]")
+            deletions.clear()
+        }
+        if (additions.isNotEmpty()) {
+            builder.append("{+${additions}+}")
+            additions.clear()
+        }
+    }
+    
     while (i < line1.length || j < line2.length) {
         when {
             i >= line1.length -> {
-                builder.append("{+${line2[j]}+}")
+                // Only additions left
+                additions.append(line2[j])
                 j++
             }
             j >= line2.length -> {
-                builder.append("[-${line1[i]}-]")
+                // Only deletions left
+                deletions.append(line1[i])
                 i++
             }
             line1[i] == line2[j] -> {
+                // Characters match - flush any pending changes and append the matching character
+                flushChanges()
                 builder.append(line1[i])
                 i++
                 j++
             }
             else -> {
-                builder.append("[-${line1[i]}-]")
-                if (j < line2.length) {
-                    builder.append("{+${line2[j]}+}")
-                }
+                // Characters differ - accumulate in respective buffers
+                deletions.append(line1[i])
+                additions.append(line2[j])
                 i++
                 j++
             }
         }
     }
+    
+    // Flush any remaining changes
+    flushChanges()
     
     return builder.toString()
 }
