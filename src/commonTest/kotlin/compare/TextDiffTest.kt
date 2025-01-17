@@ -18,6 +18,7 @@ package com.xemantic.kotlin.test.compare
 
 import com.xemantic.kotlin.test.assert
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.fail
 
 /**
@@ -27,6 +28,11 @@ import kotlin.test.fail
  *
  * The output format is intended to be as easy as possible to process
  * by the Large Language Model (LLM) like Claude from Anthropic.
+ * The format follows these principles:
+ * 1. Changes are shown character by character for precise tracking
+ * 2. Spaces are marked explicitly in change descriptions with [-␣-] and {+␣+}
+ * 3. Changes include minimal necessary context
+ * 4. Line additions and removals follow a consistent format
  *
  * Test cases are using various formats, like Markdown or HTML, however the difference
  * logic and produced description should be format agnostic by principle.
@@ -63,7 +69,7 @@ class TextDiffTest {
             Format description:
             • [-c-] shows deleted character
             • {+c+} shows added character
-            • ⠀ (U+2800) shows space character
+            • Spaces are marked explicitly in changes
             • Changes are shown character by character
 
             ┌─ original
@@ -90,20 +96,20 @@ class TextDiffTest {
             Line with one space
             Line with two spaces
             No newline at the end
-            
+
         """.trimIndent(),
         difference = """
             Text comparison failed:
             Format description:
             • [-c-] shows deleted character
             • {+c+} shows added character
-            • ⠀ (U+2800) shows space character
+            • Spaces are marked explicitly in changes
             • Changes are shown character by character
 
             ┌─ original
             │ Line with no space
-            │ Line with one space⠀
-            │ Line with two spaces⠀⠀
+            │ Line with one space 
+            │ Line with two spaces  
             │ No newline at the end
             └─ differs from revised
             │ Line with no space
@@ -112,10 +118,10 @@ class TextDiffTest {
             │ No newline at the end
             │ 
             └─ differences
-              • line 2: "Line with one space⠀" -> "Line with one space"
-                - changes: "Line with one space[-⠀-]"
-              • line 3: "Line with two spaces⠀⠀" -> "Line with two spaces"
-                - changes: "Line with two spaces[-⠀-][-⠀-]"
+              • line 2: "Line with one space " -> "Line with one space"
+                - changes: "Line with one space[- -]"
+              • line 3: "Line with two spaces  " -> "Line with two spaces"
+                - changes: "Line with two spaces[- -][- -]"
               • after line 4: "No newline at the end"
                 + ""
 
@@ -139,7 +145,7 @@ class TextDiffTest {
             Format description:
             • [-c-] shows deleted character
             • {+c+} shows added character
-            • ⠀ (U+2800) shows space character
+            • Spaces are marked explicitly in changes
             • Changes are shown character by character
 
             ┌─ original
@@ -152,7 +158,7 @@ class TextDiffTest {
             │ </div>
             └─ differences
               • line 2: "    <p>Hello</p>" -> "   <p>Hello</p>"
-                - changes: "[-⠀-]<p>Hello</p>"
+                - changes: "[- -]<p>Hello</p>"
 
         """.trimIndent()
     )
@@ -182,7 +188,7 @@ class TextDiffTest {
             Format description:
             • [-c-] shows deleted character
             • {+c+} shows added character
-            • ⠀ (U+2800) shows space character
+            • Spaces are marked explicitly in changes
             • Changes are shown character by character
 
             ┌─ original
@@ -203,9 +209,9 @@ class TextDiffTest {
             │ * List item three
             └─ differences
               • line 3: "This is a paragraph" -> "This is paragraph"
-                - changes: "This is [-a-][-⠀-]paragraph"
+                - changes: "This is [-a-][- -]paragraph"
               • line 4: "with two lines." -> "with 2 lines."
-                - changes: "with [-t-][-w-][-o-]{+2+}[-⠀-]{+⠀+}lines."
+                - changes: "with [-t-][-w-][-o-]{+2+}[- -]{+ +}lines."
               • line 7: "* List item 2" -> "* List item three"
                 - changes: "* List item [-2-]{+t+}{+h+}{+r+}{+e+}{+e+}"
 
@@ -248,7 +254,7 @@ class TextDiffTest {
             Format description:
             • [-c-] shows deleted character
             • {+c+} shows added character
-            • ⠀ (U+2800) shows space character
+            • Spaces are marked explicitly in changes
             • Changes are shown character by character
 
             ┌─ original
@@ -284,7 +290,7 @@ class TextDiffTest {
               • line 7: "    <div class=\"container\">" -> "    <div class=\"main-container\">"
                 - changes: "    <div class=\"[-c-][-o-][-n-][-t-][-a-][-i-][-n-][-e-][-r-]{+m+}{+a+}{+i+}{+n+}{+-+}{+c+}{+o+}{+n+}{+t+}{+a+}{+i+}{+n+}{+e+}{+r+}\">"
               • line 8: "      <h1>Hello World</h1>" -> "      <h1>Hello, World!</h1>"
-                - changes: "      <h1>Hello[-⠀-]{+,+}{+⠀+}World{+!+}</h1>"
+                - changes: "      <h1>Hello[- -]{+,+}{+ +}World{+!+}</h1>"
 
         """.trimIndent()
     )
@@ -338,7 +344,7 @@ class TextDiffTest {
             Format description:
             • [-c-] shows deleted character
             • {+c+} shows added character
-            • ⠀ (U+2800) shows space character
+            • Spaces are marked explicitly in changes
             • Changes are shown character by character
 
             ┌─ original
@@ -389,7 +395,7 @@ class TextDiffTest {
               • line 13: "> with multiple lines" -> "> with multiple lines."
                 - changes: "> with multiple lines{+.+}"
               • line 17: "    println(\"Hello\")" -> "  println(\"Hello\");"
-                - changes: "  [-⠀-][-⠀-]println(\"Hello\"){+;+}"
+                - changes: "[- -][- -]println(\"Hello\"){+;+}"
 
         """.trimIndent()
     )
@@ -404,5 +410,4 @@ class TextDiffTest {
             fail("The actual difference message was:\n${diff}")
         }
     }
-
 }
