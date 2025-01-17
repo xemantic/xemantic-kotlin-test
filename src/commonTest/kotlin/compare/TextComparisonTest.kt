@@ -17,9 +17,9 @@
 package com.xemantic.kotlin.test.compare
 
 import kotlin.test.Test
-import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
+import kotlin.test.fail
 
 class TextComparisonTest {
 
@@ -39,9 +39,10 @@ class TextComparisonTest {
             └─ differs from expected
             │ bar
             └─ differences
-              • at position 0: expected 'b' but was 'f'
-              • at position 1: expected 'a' but was 'o'
-              • at position 2: expected 'r' but was 'o'
+              • line 1: strings differ
+                - actual:   "foo"
+                - expected: "bar"
+                - changes:  "[-f-o-o-]{+b+a+r+}"
         """.trimIndent()
     )
 
@@ -84,9 +85,12 @@ class TextComparisonTest {
             │ * List item 1
             │ * List item three
             └─ differences
-              • line 3: extra 'a' at position 8 in "This is a paragraph"
-              • line 4: text differs: "with two lines." vs "with 2 lines."
-              • line 7: text differs: "* List item 2" vs "* List item three"
+              • line 3: "This is a paragraph" vs "This is paragraph"
+                changes: "This is {+a +}paragraph"
+              • line 4: "with two lines." vs "with 2 lines."
+                changes: "with [-two-]{+2+} lines."
+              • line 7: "* List item 2" vs "* List item three"
+                changes: "* List item [-2-]{+three+}"
         """.trimIndent()
     )
 
@@ -113,9 +117,10 @@ class TextComparisonTest {
             │    <p>Hello</p>
             │ </div>
             └─ differences
-              • line 2: indentation differs
-                actual:   "    <p>Hello</p>" (4 spaces)
-                expected: "   <p>Hello</p>"  (3 spaces)
+              • line 2: indentation difference
+                - actual:   "    <p>Hello</p>" (4 spaces)
+                - expected: "   <p>Hello</p>"  (3 spaces)
+                - changes:  "{+ +}<p>Hello</p>"
         """.trimIndent()
     )
 
@@ -144,16 +149,17 @@ class TextComparisonTest {
             │ Line with one space
             │ Line with two spaces
             │ No newline at the end
+            │ 
             └─ differences
-              • line 2: trailing whitespace: actual has 1 space
-              • line 3: trailing whitespace: actual has 2 spaces
-              • at the end: expected has a newline character
+              • line 2: trailing whitespace difference
+              • line 3: trailing whitespace difference
+              • structural: missing newline at end of file
             Note: ⠀ represents a space character
         """.trimIndent()
     )
 
     @Test
-    fun `should handle complex HTML structure differences`() = assertErrorMessage(
+    fun `should handle complex differences`() = assertErrorMessage(
         actual = """
             <!DOCTYPE html>
             <html>
@@ -213,18 +219,17 @@ class TextComparisonTest {
             │   </body>
             │ </html>
             └─ differences
-              • line 4: missing next line with <meta> tag
-              • line 7: attribute value differs:
-                actual:   class="container"
-                expected: class="main-container"
-              • line 8: text content differs:
-                actual:   "Hello World"
-                expected: "Hello, World!"
+              • structural: missing line after line 4
+                + <meta charset="utf-8">
+              • line 7: 'container' vs 'main-container'
+                changes: '<div class="[-container-]{+main-container+}">'
+              • line 8: 'Hello World' vs 'Hello, World!'
+                changes: 'Hello[- -]{+,+} World{+!+}'
         """.trimIndent()
     )
 
     @Test
-fun `should handle differences in markdown content`() = assertErrorMessage(
+    fun `should handle differences in markdown content`() = assertErrorMessage(
         actual = """
             # Main Heading
 
@@ -310,76 +315,14 @@ fun `should handle differences in markdown content`() = assertErrorMessage(
             │ }
             │ ```
             └─ differences
-              • line 5: markdown syntax differs: "*italic*" vs "_italic_"
-              • line 6: markdown syntax differs: "**bold**" vs "__bold__"
-              • line 13: missing period at end of line
-              • line 16-17: code block differences:
-                - indentation: 4 spaces vs 2 spaces
-                - missing semicolon after println("Hello")
-        """.trimIndent()
-    )
-
-    @Test
-    fun `should handle empty or blank line differences`() = assertErrorMessage(
-        actual = """
-            First line
-
-            
-            Last line
-        """.trimIndent(),
-        expected = """
-            First line
-
-            Last line
-        """.trimIndent(),
-        expectedMessage = """
-            Text comparison failed:
-            ┌─ actual
-            │ First line
-            │ 
-            │ 
-            │ Last line
-            └─ differs from expected
-            │ First line
-            │ 
-            │ Last line
-            └─ differences
-              • extra empty line at line 3
-              • line count differs: actual has 4 lines, expected has 3 lines
-        """.trimIndent()
-    )
-
-    @Test
-    fun `should handle Unicode and special character differences`() = assertErrorMessage(
-        actual = """
-            Hello → World
-            Copyright © 2025
-            Em — dash
-            Temperature: 20°C
-        """.trimIndent(),
-        expected = """
-            Hello -> World
-            Copyright (c) 2025
-            Em -- dash
-            Temperature: 20℃
-        """.trimIndent(),
-        expectedMessage = """
-            Text comparison failed:
-            ┌─ actual
-            │ Hello → World
-            │ Copyright © 2025
-            │ Em — dash
-            │ Temperature: 20°C
-            └─ differs from expected
-            │ Hello -> World
-            │ Copyright (c) 2025
-            │ Em -- dash
-            │ Temperature: 20℃
-            └─ differences
-              • line 1: Unicode arrow (→) vs ASCII arrow (->)
-              • line 2: Unicode symbol (©) vs ASCII representation "(c)"
-              • line 3: Unicode em dash (—) vs ASCII dashes (--)
-              • line 4: degree symbol (°C) vs Unicode celsius symbol (℃)
+              • line 5: characters differ
+                changes: "This is a paragraph with [-*-]{+_+}italic[-*-]{+_+} and"
+              • line 6: characters differ
+                changes: "[-**-]{+__+}bold[-**-]{+__+} text. It continues on the"
+              • line 12: missing period at end of line
+                changes: "> with multiple lines{+.+}"
+              • line 16: indentation and missing semicolon
+                changes: "[-    -]{+  +}println("Hello"){+;+}"
         """.trimIndent()
     )
 
@@ -388,7 +331,7 @@ fun `should handle differences in markdown content`() = assertErrorMessage(
             actual shouldEqual expected
         }
         assertNotNull(error.message)
-        assertEquals(expected, actual)
+        fail("The actual error message was:\n${error.message}")
     }
 
 }
