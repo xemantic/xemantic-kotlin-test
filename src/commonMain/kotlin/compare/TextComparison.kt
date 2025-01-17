@@ -49,37 +49,55 @@ public infix fun String.diff(other: String): String {
         builder.append("  • line 1: strings differ\n")
         builder.append("    - actual:   \"${thisLines[0]}\"\n")
         builder.append("    - expected: \"${otherLines[0]}\"\n")
+        builder.append("    - changes:  \"${diffLine(thisLines[0], otherLines[0])}\"\n")
+    } else {
+        // Multiline comparison
+        var lineNumber = 1
+        val minLines = minOf(thisLines.size, otherLines.size)
         
-        // Basic character-by-character diff
-        val changes = StringBuilder()
-        var i = 0
-        var j = 0
-        while (i < thisLines[0].length || j < otherLines[0].length) {
-            when {
-                i >= thisLines[0].length -> {
-                    changes.append("{+${otherLines[0][j]}+}")
-                    j++
+        for (i in 0 until minLines) {
+            if (thisLines[i] != otherLines[i]) {
+                builder.append("  • line ${lineNumber}: strings differ\n")
+                builder.append("    - actual:   \"${thisLines[i]}\"\n")
+                builder.append("    - expected: \"${otherLines[i]}\"\n")
+                builder.append("    - changes:  \"${diffLine(thisLines[i], otherLines[i])}\"\n")
+            }
+            lineNumber++
+        }
+    }
+    
+    return builder.toString()
+}
+
+private fun diffLine(line1: String, line2: String): String {
+    val builder = StringBuilder()
+    var i = 0
+    var j = 0
+    
+    while (i < line1.length || j < line2.length) {
+        when {
+            i >= line1.length -> {
+                builder.append("{+${line2[j]}+}")
+                j++
+            }
+            j >= line2.length -> {
+                builder.append("[-${line1[i]}-]")
+                i++
+            }
+            line1[i] == line2[j] -> {
+                builder.append(line1[i])
+                i++
+                j++
+            }
+            else -> {
+                builder.append("[-${line1[i]}-]")
+                if (j < line2.length) {
+                    builder.append("{+${line2[j]}+}")
                 }
-                j >= otherLines[0].length -> {
-                    changes.append("[-${thisLines[0][i]}-]")
-                    i++
-                }
-                thisLines[0][i] == otherLines[0][j] -> {
-                    changes.append(thisLines[0][i])
-                    i++
-                    j++
-                }
-                else -> {
-                    changes.append("[-${thisLines[0][i]}-]")
-                    if (j < otherLines[0].length) {
-                        changes.append("{+${otherLines[0][j]}+}")
-                    }
-                    i++
-                    j++
-                }
+                i++
+                j++
             }
         }
-        builder.append("    - changes:  \"$changes\"\n")
     }
     
     return builder.toString()
