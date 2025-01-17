@@ -18,49 +18,60 @@ package com.xemantic.kotlin.test.compare
 
 import com.xemantic.kotlin.test.assert
 import kotlin.test.Test
-import kotlin.test.assertEquals
 import kotlin.test.fail
 
-class TextComparisonTest {
+/**
+ * These tests are verifying that the [diff] function output is correct.
+ * The [diff] function compares the original and the revised strings passed as parameters
+ * and returns a description of differences.
+ * The output format is intended to be as easy as possible to process
+ * by the Large Language Model (LLM) like Claude from Anthropic.
+ */
+class TextDiffTest {
 
     @Test
-    fun `should pass if strings are the same`() {
-        assert(("foo" diff "foo").isEmpty())
+    fun `should have empty result if strings are the same`() {
+        assert(diff(original = "foo", revised = "foo").isEmpty())
     }
 
     /**
-     * This test case shows the LLM how to interpret trailing whitespaces in multiline strings in Kotlin.
-     * Basically the top and bottom triple quotes are discarded.
+     * This test case shows the LLM analyzing the code how to interpret trailing whitespaces
+     * in multiline strings in Kotlin. Basically the top and the bottom triple quotes are discarded.
      */
     @Test
-    fun `should pass if multiline string is the same as simple string`() {
-        assert(("""
-            foo
-        """.trimIndent() diff "foo").isEmpty())
+    fun `should have empty result if multiline string is the same as simple string`() {
+        assert(
+            diff(
+                """
+                foo
+                """.trimIndent(),
+                "foo"
+            ).isEmpty()
+        )
     }
 
     @Test
     fun `should report if strings are different`() = assertDifference(
-        text1 = "foo",
-        text2 = "bar",
+        original = "foo",
+        revised = "bar",
         difference = """
             Text comparison failed:
             Format description:
-            • [-c-] indicates character 'c' present in actual text but not in expected
-            • {+c+} indicates character 'c' present in expected text but not in actual
-            • ⠀ represents a space character in differences to make them visible
+            • [-c-] indicates character 'c' present in original text but not in revised
+            • {+c+} indicates character 'c' present in revised text but not in original
+            • ⠀ (braille pattern blank, U+2800) represents a space character in differences to make them visible
             • Each character change is marked separately for precise difference tracking
             • Line numbers are 1-based
             • Structural changes show exact position of insertion or deletion
 
-            ┌─ actual
+            ┌─ original
             │ foo
-            └─ differs from expected
+            └─ differs from revised
             │ bar
             └─ differences
               • line 1: strings differ
-                - actual:   "foo"
-                - expected: "bar"
+                - original: "foo"
+                - revised:  "bar"
                 - changes:  "[-f-][-o-][-o-]{+b+}{+a+}{+r+}"
 
         """.trimIndent()
@@ -68,13 +79,13 @@ class TextComparisonTest {
 
     @Test
     fun `should show differences in trailing whitespace`() = assertDifference(
-        text1 = """
+        original = """
             Line with no space
             Line with one space 
             Line with two spaces  
             No newline at the end
         """.trimIndent(),
-        text2 = """
+        revised = """
             Line with no space
             Line with one space
             Line with two spaces
@@ -84,19 +95,19 @@ class TextComparisonTest {
         difference = """
             Text comparison failed:
             Format description:
-            • [-c-] indicates character 'c' present in actual text but not in expected
-            • {+c+} indicates character 'c' present in expected text but not in actual
-            • ⠀ represents a space character in differences to make them visible
+            • [-c-] indicates character 'c' present in original text but not in revised
+            • {+c+} indicates character 'c' present in revised text but not in original
+            • ⠀ (braille pattern blank, U+2800) represents a space character in differences to make them visible
             • Each character change is marked separately for precise difference tracking
             • Line numbers are 1-based
             • Structural changes show exact position of insertion or deletion
 
-            ┌─ actual
+            ┌─ original
             │ Line with no space
             │ Line with one space⠀
             │ Line with two spaces⠀⠀
             │ No newline at the end
-            └─ differs from expected
+            └─ differs from revised
             │ Line with no space
             │ Line with one space
             │ Line with two spaces
@@ -104,12 +115,12 @@ class TextComparisonTest {
             │ 
             └─ differences
               • line 2: trailing whitespace difference
-                - actual:   "Line with one space⠀"
-                - expected: "Line with one space"
+                - original: "Line with one space⠀"
+                - revised:  "Line with one space"
                 - changes:  "Line with one space[-⠀-]"
               • line 3: trailing whitespace difference
-                - actual:   "Line with two spaces⠀⠀"
-                - expected: "Line with two spaces"
+                - original: "Line with two spaces⠀⠀"
+                - revised:  "Line with two spaces"
                 - changes:  "Line with two spaces[-⠀-][-⠀-]"
               • structural: missing line after line 4
                 + 
@@ -119,12 +130,12 @@ class TextComparisonTest {
 
     @Test
     fun `should fail even if only whitespaces are different`() = assertDifference(
-        text1 = """
+        original = """
             <div>
                 <p>Hello</p>
             </div>
         """.trimIndent(),
-        text2 = """
+        revised = """
             <div>
                <p>Hello</p>
             </div>
@@ -132,25 +143,25 @@ class TextComparisonTest {
         difference = """
             Text comparison failed:
             Format description:
-            • [-c-] indicates character 'c' present in actual text but not in expected
-            • {+c+} indicates character 'c' present in expected text but not in actual
-            • ⠀ represents a space character in differences to make them visible
+            • [-c-] indicates character 'c' present in original text but not in revised
+            • {+c+} indicates character 'c' present in revised text but not in original
+            • ⠀ (braille pattern blank, U+2800) represents a space character in differences to make them visible
             • Each character change is marked separately for precise difference tracking
             • Line numbers are 1-based
             • Structural changes show exact position of insertion or deletion
 
-            ┌─ actual
+            ┌─ original
             │ <div>
             │     <p>Hello</p>
             │ </div>
-            └─ differs from expected
+            └─ differs from revised
             │ <div>
             │    <p>Hello</p>
             │ </div>
             └─ differences
               • line 2: indentation difference
-                - actual:   "    <p>Hello</p>" (4 spaces)
-                - expected: "   <p>Hello</p>"  (3 spaces)
+                - original: "    <p>Hello</p>" (4 spaces)
+                - revised:  "   <p>Hello</p>"  (3 spaces)
                 - changes:  "[-⠀-]<p>Hello</p>"
 
         """.trimIndent()
@@ -158,7 +169,7 @@ class TextComparisonTest {
 
     @Test
     fun `should fail if multiline strings are different`() = assertDifference(
-        text1 = """
+        original = """
             # Heading
 
             This is a paragraph
@@ -167,7 +178,7 @@ class TextComparisonTest {
             * List item 1
             * List item 2
         """.trimIndent(),
-        text2 = """
+        revised = """
             # Heading
 
             This is paragraph
@@ -179,14 +190,14 @@ class TextComparisonTest {
         difference = """
             Text comparison failed:
             Format description:
-            • [-c-] indicates character 'c' present in actual text but not in expected
-            • {+c+} indicates character 'c' present in expected text but not in actual
-            • ⠀ represents a space character in differences to make them visible
+            • [-c-] indicates character 'c' present in original text but not in revised
+            • {+c+} indicates character 'c' present in revised text but not in original
+            • ⠀ (braille pattern blank, U+2800) represents a space character in differences to make them visible
             • Each character change is marked separately for precise difference tracking
             • Line numbers are 1-based
             • Structural changes show exact position of insertion or deletion
 
-            ┌─ actual
+            ┌─ original
             │ # Heading
             │ 
             │ This is a paragraph
@@ -194,7 +205,7 @@ class TextComparisonTest {
             │ 
             │ * List item 1
             │ * List item 2
-            └─ differs from expected
+            └─ differs from revised
             │ # Heading
             │ 
             │ This is paragraph
@@ -204,16 +215,16 @@ class TextComparisonTest {
             │ * List item three
             └─ differences
               • line 3: strings differ
-                - actual:   "This is a paragraph"
-                - expected: "This is paragraph"
+                - original: "This is a paragraph"
+                - revised:  "This is paragraph"
                 - changes:  "This is [-a-][ -]paragraph"
               • line 4: strings differ
-                - actual:   "with two lines."
-                - expected: "with 2 lines."
+                - original: "with two lines."
+                - revised:  "with 2 lines."
                 - changes:  "with [-t-][-w-][-o-]{+2+} lines."
               • line 7: strings differ
-                - actual:   "* List item 2"
-                - expected: "* List item three"
+                - original: "* List item 2"
+                - revised:  "* List item three"
                 - changes:  "* List item [-2-]{+t+}{+h+}{+r+}{+e+}{+e+}"
 
         """.trimIndent()
@@ -221,7 +232,7 @@ class TextComparisonTest {
 
     @Test
     fun `should handle complex differences`() = assertDifference(
-        text1 = """
+        original = """
             <!DOCTYPE html>
             <html>
               <head>
@@ -235,7 +246,7 @@ class TextComparisonTest {
               </body>
             </html>
         """.trimIndent(),
-        text2 = """
+        revised = """
             <!DOCTYPE html>
             <html>
               <head>
@@ -253,14 +264,14 @@ class TextComparisonTest {
         difference = """
             Text comparison failed:
             Format description:
-            • [-c-] indicates character 'c' present in actual text but not in expected
-            • {+c+} indicates character 'c' present in expected text but not in actual
-            • ⠀ represents a space character in differences to make them visible
+            • [-c-] indicates character 'c' present in original text but not in revised
+            • {+c+} indicates character 'c' present in revised text but not in original
+            • ⠀ (braille pattern blank, U+2800) represents a space character in differences to make them visible
             • Each character change is marked separately for precise difference tracking
             • Line numbers are 1-based
             • Structural changes show exact position of insertion or deletion
 
-            ┌─ actual
+            ┌─ original
             │ <!DOCTYPE html>
             │ <html>
             │   <head>
@@ -273,7 +284,7 @@ class TextComparisonTest {
             │     </div>
             │   </body>
             │ </html>
-            └─ differs from expected
+            └─ differs from revised
             │ <!DOCTYPE html>
             │ <html>
             │   <head>
@@ -291,12 +302,12 @@ class TextComparisonTest {
               • structural: missing line after line 4
                 +     <meta charset="utf-8">
               • line 7: strings differ
-                - actual:   "    <div class="container">"
-                - expected: "    <div class="main-container">"
-                - changes:  "    <div class="[-c-][-o-][-n-][-t-][-a-][-i-][-n-][-e-][-r-]{+m+}{+a+}{+i+}{+n+}{+-+}{+c+}{+o+}{+n+}{+t+}{+a+}{+i+}{+n+}{+e+}{+r+}">"
+                - original: "    <div class=\"container\">"
+                - revised:  "    <div class=\"main-container\">"
+                - changes:  "    <div class=\"[-c-][-o-][-n-][-t-][-a-][-i-][-n-][-e-][-r-]{+m+}{+a+}{+i+}{+n+}{+-+}{+c+}{+o+}{+n+}{+t+}{+a+}{+i+}{+n+}{+e+}{+r+}\">"
               • line 8: strings differ
-                - actual:   "      <h1>Hello World</h1>"
-                - expected: "      <h1>Hello, World!</h1>"
+                - original: "      <h1>Hello World</h1>"
+                - revised:  "      <h1>Hello, World!</h1>"
                 - changes:  "      <h1>Hello[-⠀-]{+,+}{+⠀+}World{+!+}</h1>"
 
         """.trimIndent()
@@ -304,7 +315,7 @@ class TextComparisonTest {
 
     @Test
     fun `should handle differences in markdown content`() = assertDifference(
-        text1 = """
+        original = """
             # Main Heading
 
             ## Sub-heading
@@ -325,7 +336,7 @@ class TextComparisonTest {
             }
             ```
         """.trimIndent(),
-        text2 = """
+        revised = """
             # Main Heading
 
             ## Sub-heading
@@ -349,14 +360,14 @@ class TextComparisonTest {
         difference = """
             Text comparison failed:
             Format description:
-            • [-c-] indicates character 'c' present in actual text but not in expected
-            • {+c+} indicates character 'c' present in expected text but not in actual
-            • ⠀ represents a space character in differences to make them visible
+            • [-c-] indicates character 'c' present in original text but not in revised
+            • {+c+} indicates character 'c' present in revised text but not in original
+            • ⠀ (braille pattern blank, U+2800) represents a space character in differences to make them visible
             • Each character change is marked separately for precise difference tracking
             • Line numbers are 1-based
             • Structural changes show exact position of insertion or deletion
 
-            ┌─ actual
+            ┌─ original
             │ # Main Heading
             │ 
             │ ## Sub-heading
@@ -376,7 +387,7 @@ class TextComparisonTest {
             │     println("Hello")
             │ }
             │ ```
-            └─ differs from expected
+            └─ differs from revised
             │ # Main Heading
             │ 
             │ ## Sub-heading
@@ -409,8 +420,12 @@ class TextComparisonTest {
         """.trimIndent()
     )
 
-    private fun assertDifference(text1: String, text2: String, difference: String) {
-        val diff = text1 diff text2
+    private fun assertDifference(
+        original: String,
+        revised: String,
+        difference: String
+    ) {
+        val diff = diff(original, revised)
         if ((diff != difference) && diff.isNotEmpty()) {
             fail("The actual difference message was:\n${diff}")
         }

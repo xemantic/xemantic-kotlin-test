@@ -18,21 +18,29 @@ package com.xemantic.kotlin.test.compare
 
 /**
  * Compares two strings and returns a formatted string describing their differences.
- * Returns an empty string if the strings are identical.
+ *
+ * This function compares the [original] and the [revised] strings passed as parameters
+ * and returns a description of differences.
+ * The output format is intended to be as easy as possible to process
+ * by the Large Language Model (LLM) like Claude from Anthropic.
+ *
+ * @param original the original string to compare.
+ * @param revised the revised string to compare.
+ * @return the formatted description of differences or an empty string if both parameters are equal.
  */
-public infix fun String.diff(other: String): String {
-    if (this == other) return ""
+public fun diff(original: String, revised: String): String {
+    if (original == revised) return ""
     
-    val thisLines = this.lines()
-    val otherLines = other.lines()
+    val originalLines = original.lines()
+    val revisedLines = revised.lines()
     
     val builder = StringBuilder()
     // Start with format description
     builder.append("""
         Text comparison failed:
         Format description:
-        • [-c-] indicates character 'c' present in actual text but not in expected
-        • {+c+} indicates character 'c' present in expected text but not in actual
+        • [-c-] indicates character 'c' present in original text but not in revised
+        • {+c+} indicates character 'c' present in revised text but not in original
         • ⠀ represents a space character in differences to make them visible
         • Each character change is marked separately for precise difference tracking
         • Line numbers are 1-based
@@ -42,28 +50,28 @@ public infix fun String.diff(other: String): String {
     
     // Output actual text
     builder.append("┌─ actual\n")
-    thisLines.forEach { line ->
+    originalLines.forEach { line ->
         builder.append("│ ${line.visualizeTrailingSpaces()}\n")
     }
     
     // Output expected text
     builder.append("└─ differs from expected\n")
-    otherLines.forEach { line ->
+    revisedLines.forEach { line ->
         builder.append("│ ${line.visualizeTrailingSpaces()}\n")
     }
     
     // Output differences
     builder.append("└─ differences\n")
     
-    if (thisLines.size == 1 && otherLines.size == 1) {
+    if (originalLines.size == 1 && revisedLines.size == 1) {
         // Single line comparison
         builder.append("  • line 1: strings differ\n")
-        builder.append("    - actual:   \"${thisLines[0]}\"\n")
-        builder.append("    - expected: \"${otherLines[0]}\"\n")
-        builder.append("    - changes:  \"${diffLine(thisLines[0], otherLines[0])}\"\n")
+        builder.append("    - actual:   \"${originalLines[0]}\"\n")
+        builder.append("    - expected: \"${revisedLines[0]}\"\n")
+        builder.append("    - changes:  \"${diffLine(originalLines[0], revisedLines[0])}\"\n")
     } else {
         // Find matching blocks
-        val matches = findMatchingBlocks(thisLines, otherLines)
+        val matches = findMatchingBlocks(originalLines, revisedLines)
         var thisIndex = 0
         var otherIndex = 0
         var currentLine = 1
@@ -75,7 +83,7 @@ public infix fun String.diff(other: String): String {
                     thisIndex >= match.thisStart && otherIndex < match.otherStart -> {
                         // Addition in other
                         builder.append("  • structural: missing line after line ${currentLine - 1}\n")
-                        builder.append("    + ${otherLines[otherIndex]}\n")
+                        builder.append("    + ${revisedLines[otherIndex]}\n")
                         otherIndex++
                     }
                     thisIndex < match.thisStart && otherIndex >= match.otherStart -> {
@@ -85,8 +93,8 @@ public infix fun String.diff(other: String): String {
                     }
                     thisIndex < match.thisStart && otherIndex < match.otherStart -> {
                         // Lines differ
-                        val thisLine = thisLines[thisIndex]
-                        val otherLine = otherLines[otherIndex]
+                        val thisLine = originalLines[thisIndex]
+                        val otherLine = revisedLines[otherIndex]
                         
                         if (thisLine.trim() == otherLine.trim()) {
                             if (thisLine.countTrailingSpaces() != otherLine.countTrailingSpaces()) {
@@ -121,9 +129,9 @@ public infix fun String.diff(other: String): String {
             
             // Skip matching block
             repeat(match.length) {
-                if (thisLines[thisIndex] != otherLines[otherIndex]) {
-                    val thisLine = thisLines[thisIndex]
-                    val otherLine = otherLines[otherIndex]
+                if (originalLines[thisIndex] != revisedLines[otherIndex]) {
+                    val thisLine = originalLines[thisIndex]
+                    val otherLine = revisedLines[otherIndex]
                     builder.append("  • line $currentLine: strings differ\n")
                     builder.append("    - actual:   \"${thisLine}\"\n")
                     builder.append("    - expected: \"${otherLine}\"\n")
@@ -136,9 +144,9 @@ public infix fun String.diff(other: String): String {
         }
         
         // Handle remaining lines
-        while (otherIndex < otherLines.size) {
+        while (otherIndex < revisedLines.size) {
             builder.append("  • structural: missing line after line ${currentLine - 1}\n")
-            builder.append("    + ${otherLines[otherIndex]}\n")
+            builder.append("    + ${revisedLines[otherIndex]}\n")
             otherIndex++
         }
     }
@@ -233,43 +241,39 @@ private fun String.visualizeTrailingSpaces(): String {
 }
 
 private fun diffLine(line1: String, line2: String): String {
-    // Find longest common prefix and suffix
-    var prefixLen = 0
-    val minLen = minOf(line1.length, line2.length)
-    while (prefixLen < minLen && line1[prefixLen] == line2[prefixLen]) {
-        prefixLen++
-    }
-    
-    var suffixLen = 0
-    while (suffixLen < minLen - prefixLen && 
-           line1[line1.length - 1 - suffixLen] == line2[line2.length - 1 - suffixLen]) {
-        suffixLen++
-    }
+    val chars1 = line1.toList()
+    val chars2 = line2.toList()
     
     val builder = StringBuilder()
+    var i = 0
+    var j = 0
+    var lastMatchEnd = 0
     
-    // Add common prefix
-    if (prefixLen > 0) {
-        builder.append(line1.substring(0, prefixLen))
-    }
-    
-    // Handle the differing part character by character
-    val chars1 = line1.substring(prefixLen, line1.length - suffixLen).toList()
-    val chars2 = line2.substring(prefixLen, line2.length - suffixLen).toList()
-    
-    // First output all deletions
-    chars1.forEach { c ->
-        builder.append(if (c == ' ') "[-⠀-]" else "[-$c-]")
-    }
-    
-    // Then output all additions
-    chars2.forEach { c ->
-        builder.append(if (c == ' ') "{+⠀+}" else "{+$c+}")
-    }
-    
-    // Add common suffix
-    if (suffixLen > 0) {
-        builder.append(line1.substring(line1.length - suffixLen))
+    // Find matching and differing sections
+    while (i < chars1.size || j < chars2.size) {
+        // If we have corresponding characters, check if they match
+        if (i < chars1.size && j < chars2.size && chars1[i] == chars2[j]) {
+            builder.append(chars1[i])
+            i++
+            j++
+            lastMatchEnd = builder.length
+            continue
+        }
+        
+        // Mark all deletions from current position until next match or end
+        val deletionsStart = builder.length
+        while (i < chars1.size && (j >= chars2.size || chars1[i] != chars2[j])) {
+            val c = chars1[i]
+            builder.append(if (c == ' ') "[-⠀-]" else "[-$c-]")
+            i++
+        }
+        
+        // Mark all additions from current position until next match or end
+        while (j < chars2.size && (i >= chars1.size || chars1[i] != chars2[j])) {
+            val c = chars2[j]
+            builder.append(if (c == ' ') "{+⠀+}" else "{+$c+}")
+            j++
+        }
     }
     
     return builder.toString()
