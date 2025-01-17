@@ -27,7 +27,18 @@ public infix fun String.diff(other: String): String {
     val otherLines = other.lines()
     
     val builder = StringBuilder()
-    builder.append("Text comparison failed:\n")
+    // Start with format description
+    builder.append("""
+        Text comparison failed:
+        Format description:
+        • [-c-] indicates character 'c' present in actual text but not in expected
+        • {+c+} indicates character 'c' present in expected text but not in actual
+        • ⠀ represents a space character in differences to make them visible
+        • Each character change is marked separately for precise difference tracking
+        • Line numbers are 1-based
+        • Structural changes show exact position of insertion or deletion
+
+    """.trimIndent()).append("\n")
     
     // Output actual text
     builder.append("┌─ actual\n")
@@ -57,22 +68,22 @@ public infix fun String.diff(other: String): String {
         var otherIndex = 0
         var currentLine = 1
         
-        matches.forEach { (thisStart, otherStart, length) ->
+        matches.forEach { match ->
             // Handle differences before the match
-            while (thisIndex < thisStart || otherIndex < otherStart) {
+            while (thisIndex < match.thisStart || otherIndex < match.otherStart) {
                 when {
-                    thisIndex >= thisStart && otherIndex < otherStart -> {
+                    thisIndex >= match.thisStart && otherIndex < match.otherStart -> {
                         // Addition in other
                         builder.append("  • structural: missing line after line ${currentLine - 1}\n")
                         builder.append("    + ${otherLines[otherIndex]}\n")
                         otherIndex++
                     }
-                    thisIndex < thisStart && otherIndex >= otherStart -> {
+                    thisIndex < match.thisStart && otherIndex >= match.otherStart -> {
                         // Deletion in this - skip for now as we focus on additions
                         thisIndex++
                         currentLine++
                     }
-                    thisIndex < thisStart && otherIndex < otherStart -> {
+                    thisIndex < match.thisStart && otherIndex < match.otherStart -> {
                         // Lines differ
                         val thisLine = thisLines[thisIndex]
                         val otherLine = otherLines[otherIndex]
@@ -109,7 +120,7 @@ public infix fun String.diff(other: String): String {
             }
             
             // Skip matching block
-            repeat(length) {
+            repeat(match.length) {
                 if (thisLines[thisIndex] != otherLines[otherIndex]) {
                     val thisLine = thisLines[thisIndex]
                     val otherLine = otherLines[otherIndex]

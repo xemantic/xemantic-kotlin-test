@@ -45,6 +45,14 @@ class TextComparisonTest {
         text2 = "bar",
         difference = """
             Text comparison failed:
+            Format description:
+            • [-c-] indicates character 'c' present in actual text but not in expected
+            • {+c+} indicates character 'c' present in expected text but not in actual
+            • ⠀ represents a space character in differences to make them visible
+            • Each character change is marked separately for precise difference tracking
+            • Line numbers are 1-based
+            • Structural changes show exact position of insertion or deletion
+
             ┌─ actual
             │ foo
             └─ differs from expected
@@ -75,6 +83,14 @@ class TextComparisonTest {
         """.trimIndent(),
         difference = """
             Text comparison failed:
+            Format description:
+            • [-c-] indicates character 'c' present in actual text but not in expected
+            • {+c+} indicates character 'c' present in expected text but not in actual
+            • ⠀ represents a space character in differences to make them visible
+            • Each character change is marked separately for precise difference tracking
+            • Line numbers are 1-based
+            • Structural changes show exact position of insertion or deletion
+
             ┌─ actual
             │ Line with no space
             │ Line with one space⠀
@@ -115,6 +131,14 @@ class TextComparisonTest {
         """.trimIndent(),
         difference = """
             Text comparison failed:
+            Format description:
+            • [-c-] indicates character 'c' present in actual text but not in expected
+            • {+c+} indicates character 'c' present in expected text but not in actual
+            • ⠀ represents a space character in differences to make them visible
+            • Each character change is marked separately for precise difference tracking
+            • Line numbers are 1-based
+            • Structural changes show exact position of insertion or deletion
+
             ┌─ actual
             │ <div>
             │     <p>Hello</p>
@@ -154,6 +178,14 @@ class TextComparisonTest {
         """.trimIndent(),
         difference = """
             Text comparison failed:
+            Format description:
+            • [-c-] indicates character 'c' present in actual text but not in expected
+            • {+c+} indicates character 'c' present in expected text but not in actual
+            • ⠀ represents a space character in differences to make them visible
+            • Each character change is marked separately for precise difference tracking
+            • Line numbers are 1-based
+            • Structural changes show exact position of insertion or deletion
+
             ┌─ actual
             │ # Heading
             │ 
@@ -220,6 +252,14 @@ class TextComparisonTest {
         """.trimIndent(),
         difference = """
             Text comparison failed:
+            Format description:
+            • [-c-] indicates character 'c' present in actual text but not in expected
+            • {+c+} indicates character 'c' present in expected text but not in actual
+            • ⠀ represents a space character in differences to make them visible
+            • Each character change is marked separately for precise difference tracking
+            • Line numbers are 1-based
+            • Structural changes show exact position of insertion or deletion
+
             ┌─ actual
             │ <!DOCTYPE html>
             │ <html>
@@ -227,7 +267,7 @@ class TextComparisonTest {
             │     <title>Test Page</title>
             │   </head>
             │   <body>
-            │     <div class="container">
+            │     <div class=\"container\">
             │       <h1>Hello World</h1>
             │       <p>This is a test.</p>
             │     </div>
@@ -238,10 +278,10 @@ class TextComparisonTest {
             │ <html>
             │   <head>
             │     <title>Test Page</title>
-            │     <meta charset="utf-8">
+            │     <meta charset=\"utf-8\">
             │   </head>
             │   <body>
-            │     <div class="main-container">
+            │     <div class=\"main-container\">
             │       <h1>Hello, World!</h1>
             │       <p>This is a test.</p>
             │     </div>
@@ -249,15 +289,15 @@ class TextComparisonTest {
             │ </html>
             └─ differences
               • structural: missing line after line 4
-                +     <meta charset="utf-8">
+                +     <meta charset=\"utf-8\">
               • line 7: strings differ
-                - actual:   "    <div class=\"container\">"
-                - expected: "    <div class=\"main-container\">"
-                - changes:  "    <div class=\"[-c-][-o-][-n-][-t-][-a-][-i-][-n-][-e-][-r-]{+m+}{+a+}{+i+}{+n+}{+-+}{+c+}{+o+}{+n+}{+t+}{+a+}{+i+}{+n+}{+e+}{+r+}\">"
+                - actual:   \"    <div class=\"container\">\"
+                - expected: \"    <div class=\"main-container\">\"
+                - changes:  \"    <div class=\"[-c-][-o-][-n-][-t-][-a-][-i-][-n-][-e-][-r-]{+m+}{+a+}{+i+}{+n+}{+-+}{+c+}{+o+}{+n+}{+t+}{+a+}{+i+}{+n+}{+e+}{+r+}\">\"
               • line 8: strings differ
-                - actual:   "      <h1>Hello World</h1>"
-                - expected: "      <h1>Hello, World!</h1>"
-                - changes:  "      <h1>Hello[-⠀-]{+,+}{+⠀+}World{+!+}</h1>"
+                - actual:   \"      <h1>Hello World</h1>\"
+                - expected: \"      <h1>Hello, World!</h1>\"
+                - changes:  \"      <h1>Hello[-⠀-]{+,+}{+⠀+}World{+!+}</h1>\"
 
         """.trimIndent()
     )
@@ -308,6 +348,14 @@ class TextComparisonTest {
         """.trimIndent(),
         difference = """
             Text comparison failed:
+            Format description:
+            • [-c-] indicates character 'c' present in actual text but not in expected
+            • {+c+} indicates character 'c' present in expected text but not in actual
+            • ⠀ represents a space character in differences to make them visible
+            • Each character change is marked separately for precise difference tracking
+            • Line numbers are 1-based
+            • Structural changes show exact position of insertion or deletion
+
             ┌─ actual
             │ # Main Heading
             │ 
