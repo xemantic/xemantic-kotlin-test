@@ -24,8 +24,12 @@ import kotlin.test.fail
  * These tests are verifying that the [diff] function output is correct.
  * The [diff] function compares the original and the revised strings passed as parameters
  * and returns a description of differences.
+ *
  * The output format is intended to be as easy as possible to process
  * by the Large Language Model (LLM) like Claude from Anthropic.
+ *
+ * Test cases are using various formats, like Markdown or HTML, however the difference
+ * logic and produced description should be format agnostic by principle.
  */
 class TextDiffTest {
 
