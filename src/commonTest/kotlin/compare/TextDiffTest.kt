@@ -118,11 +118,11 @@ class TextDiffTest {
             │ No newline at the end
             │ 
             └─ differences
-              • line 2: trailing whitespace difference
+              • line 2: strings differ
                 - original: "Line with one space⠀"
                 - revised:  "Line with one space"
                 - changes:  "Line with one space[-⠀-]"
-              • line 3: trailing whitespace difference
+              • line 3: strings differ
                 - original: "Line with two spaces⠀⠀"
                 - revised:  "Line with two spaces"
                 - changes:  "Line with two spaces[-⠀-][-⠀-]"
@@ -163,9 +163,9 @@ class TextDiffTest {
             │    <p>Hello</p>
             │ </div>
             └─ differences
-              • line 2: indentation difference
-                - original: "    <p>Hello</p>"(4 spaces)
-                - revised:  "   <p>Hello</p>"(3 spaces)
+              • line 2: strings differ
+                - original: "    <p>Hello</p>"
+                - revised:  "   <p>Hello</p>"
                 - changes:  "[-⠀-]<p>Hello</p>"
 
         """.trimIndent()
