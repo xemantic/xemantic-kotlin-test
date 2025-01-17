@@ -130,12 +130,14 @@ class TextComparisonTest {
             Line with no space
             Line with one space 
             Line with two spaces  
-            No newline at the end""".trimIndent(),
+            No newline at the end
+        """.trimIndent(),
         expected = """
             Line with no space
             Line with one space
             Line with two spaces
             No newline at the end
+            
         """.trimIndent(),
         expectedMessage = """
             Text comparison failed:
