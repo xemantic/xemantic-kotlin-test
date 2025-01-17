@@ -76,7 +76,7 @@ class TextDiffTest {
               • line 1: strings differ
                 - original: "foo"
                 - revised:  "bar"
-                - changes:  "[-f-][-o-][-o-]{+b+}{+a+}{+r+}"
+                - changes:  "[-f-]{+b+}[-o-]{+a+}[-o-]{+r+}"
 
         """.trimIndent()
     )
@@ -164,8 +164,8 @@ class TextDiffTest {
             │ </div>
             └─ differences
               • line 2: indentation difference
-                - original: "    <p>Hello</p>" (4 spaces)
-                - revised:  "   <p>Hello</p>" (3 spaces)
+                - original: "    <p>Hello</p>"(4 spaces)
+                - revised:  "   <p>Hello</p>"(3 spaces)
                 - changes:  "[-⠀-]<p>Hello</p>"
 
         """.trimIndent()
@@ -225,7 +225,7 @@ class TextDiffTest {
               • line 4: strings differ
                 - original: "with two lines."
                 - revised:  "with 2 lines."
-                - changes:  "with [-t-][-w-][-o-]{+2+} lines."
+                - changes:  "with [-t-][-w-][-o-]{+2+}[-⠀-]{+⠀+}lines."
               • line 7: strings differ
                 - original: "* List item 2"
                 - revised:  "* List item three"
@@ -412,14 +412,22 @@ class TextDiffTest {
             │ }
             │ ```
             └─ differences
-              • line 5: characters differ
-                changes: "This is a paragraph with [-*-]{+_+}italic[-*-]{+_+} and"
-              • line 6: characters differ
-                changes: "[-*-][-*-]{+_+}{+_+}bold[-*-][-*-]{+_+}{+_+} text. It continues on the"
-              • line 12: missing period at end of line
-                changes: "> with multiple lines{+.+}"
-              • line 16: indentation and missing semicolon
-                changes: "[-⠀-][-⠀-][-⠀-][-⠀-]println(\"Hello\"){+;+}"
+              • line 5: strings differ
+                - original: "This is a paragraph with *italic* and"
+                - revised:  "This is a paragraph with _italic_ and"
+                - changes:  "This is a paragraph with [-*-]{+_+}italic[-*-]{+_+} and"
+              • line 6: strings differ
+                - original: "**bold** text. It continues on the"
+                - revised:  "__bold__ text. It continues on the"
+                - changes:  "[-*-]{+_+}[-*-]{+_+}bold[-*-]{+_+}[-*-]{+_+} text. It continues on the"
+              • line 13: strings differ
+                - original: "> with multiple lines"
+                - revised:  "> with multiple lines."
+                - changes:  "> with multiple lines{+.+}"
+              • line 17: strings differ
+                - original: "    println(\"Hello\")"
+                - revised:  "  println(\"Hello\");"
+                - changes:  "  [-⠀-][-⠀-]println(\"Hello\"){+;+}"
 
         """.trimIndent()
     )
