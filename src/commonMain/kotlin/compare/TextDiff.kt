@@ -41,7 +41,7 @@ public fun diff(original: String, revised: String): String {
         Format description:
         • [-c-] indicates character 'c' present in original text but not in revised
         • {+c+} indicates character 'c' present in revised text but not in original
-        • ⠀ represents a space character in differences to make them visible
+        • ⠀ (braille pattern blank, U+2800) represents a space character in differences to make them visible
         • Each character change is marked separately for precise difference tracking
         • Line numbers are 1-based
         • Structural changes show exact position of insertion or deletion

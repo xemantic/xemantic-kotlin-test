@@ -165,7 +165,7 @@ class TextDiffTest {
             └─ differences
               • line 2: indentation difference
                 - original: "    <p>Hello</p>" (4 spaces)
-                - revised:  "   <p>Hello</p>"  (3 spaces)
+                - revised:  "   <p>Hello</p>" (3 spaces)
                 - changes:  "[-⠀-]<p>Hello</p>"
 
         """.trimIndent()
