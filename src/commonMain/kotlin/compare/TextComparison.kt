@@ -32,13 +32,13 @@ public infix fun String.diff(other: String): String {
     // Output actual text
     builder.append("┌─ actual\n")
     thisLines.forEach { line ->
-        builder.append("│ $line\n")
+        builder.append("│ ${line.visualizeTrailingSpaces()}\n")
     }
     
     // Output expected text
     builder.append("└─ differs from expected\n")
     otherLines.forEach { line ->
-        builder.append("│ $line\n")
+        builder.append("│ ${line.visualizeTrailingSpaces()}\n")
     }
     
     // Output differences
@@ -57,54 +57,48 @@ public infix fun String.diff(other: String): String {
         
         for (i in 0 until minLines) {
             if (thisLines[i] != otherLines[i]) {
-                // Check if this is a whitespace-only difference
-                val thisNonSpace = thisLines[i].trimStart()
-                val otherNonSpace = otherLines[i].trimStart()
+                val thisLine = thisLines[i]
+                val otherLine = otherLines[i]
                 
-                if (thisNonSpace == otherNonSpace) {
-                    // Whitespace difference
-                    val thisSpaces = thisLines[i].countLeadingSpaces()
-                    val otherSpaces = otherLines[i].countLeadingSpaces()
-                    val spaceDiff = thisSpaces - otherSpaces
-                    
-                    builder.append("  • line ${lineNumber}: indentation difference\n")
-                    builder.append("    - actual:   \"${thisLines[i]}\" ($thisSpaces spaces)\n")
-                    builder.append("    - expected: \"${otherLines[i]}\"  ($otherSpaces spaces)\n")
-                    
-                    if (spaceDiff > 0) {
-                        // Extra spaces in actual
-                        builder.append("    - changes:  \"${
-                            "[-⠀-]".repeat(spaceDiff)}$thisNonSpace\"\n")
+                // Check if this is a whitespace-only difference
+                if (thisLine.trim() == otherLine.trim()) {
+                    if (thisLine.countTrailingSpaces() != otherLine.countTrailingSpaces()) {
+                        // Trailing whitespace difference
+                        builder.append("  • line ${lineNumber}: trailing whitespace difference\n")
+                        builder.append("    - actual:   \"${thisLine.visualizeTrailingSpaces()}\"\n")
+                        builder.append("    - expected: \"${otherLine.visualizeTrailingSpaces()}\"\n")
+                        
+                        val nonSpaceContent = thisLine.trimEnd()
+                        val trailingSpaces = thisLine.countTrailingSpaces()
+                        val otherTrailingSpaces = otherLine.countTrailingSpaces()
+                        
+                        builder.append("    - changes:  \"$nonSpaceContent${
+                            "[-⠀-]".repeat(trailingSpaces - otherTrailingSpaces)}\"\n")
                     } else {
-                        // Extra spaces in expected
+                        // Indentation difference
+                        val thisSpaces = thisLine.countLeadingSpaces()
+                        val otherSpaces = otherLine.countLeadingSpaces()
+                        
+                        builder.append("  • line ${lineNumber}: indentation difference\n")
+                        builder.append("    - actual:   \"${thisLine}\" ($thisSpaces spaces)\n")
+                        builder.append("    - expected: \"${otherLine}\"  ($otherSpaces spaces)\n")
                         builder.append("    - changes:  \"${
-                            "{+⠀+}".repeat(-spaceDiff)}$thisNonSpace\"\n")
+                            if (thisSpaces > otherSpaces) "[-⠀-]" else "{+⠀+}"}${thisLine.trimStart()}\"\n")
                     }
-                } else if (thisLines[i].trim() == otherLines[i].trim() && 
-                          (thisLines[i].endsWith(" ") || otherLines[i].endsWith(" "))) {
-                    // Trailing whitespace difference
-                    val thisTrailing = thisLines[i].countTrailingSpaces()
-                    val otherTrailing = otherLines[i].countTrailingSpaces()
-                    
-                    builder.append("  • line ${lineNumber}: trailing whitespace difference\n")
-                    val nonSpace = thisLines[i].trim()
-                    builder.append("    - changes:  \"$nonSpace${
-                        if (thisTrailing > otherTrailing) "[-⠀-]".repeat(thisTrailing - otherTrailing)
-                        else "{+⠀+}".repeat(otherTrailing - thisTrailing)}\"\n")
                 } else {
                     // Regular string difference
                     builder.append("  • line ${lineNumber}: strings differ\n")
-                    builder.append("    - actual:   \"${thisLines[i]}\"\n")
-                    builder.append("    - expected: \"${otherLines[i]}\"\n")
-                    builder.append("    - changes:  \"${diffLine(thisLines[i], otherLines[i])}\"\n")
+                    builder.append("    - actual:   \"${thisLine}\"\n")
+                    builder.append("    - expected: \"${otherLine}\"\n")
+                    builder.append("    - changes:  \"${diffLine(thisLine, otherLine)}\"\n")
                 }
             }
             lineNumber++
         }
         
-        // Check for structural differences (missing or extra lines)
+        // Check for structural differences
         if (thisLines.size != otherLines.size) {
-            // Will be implemented for structural differences
+            builder.append("  • structural: missing newline at end of file\n")
         }
     }
     
@@ -127,6 +121,19 @@ private fun String.countTrailingSpaces(): Int {
         else break
     }
     return count
+}
+
+private fun String.visualizeTrailingSpaces(): String {
+    if (isEmpty()) return this
+    
+    var lastNonSpace = length - 1
+    while (lastNonSpace >= 0 && this[lastNonSpace] == ' ') {
+        lastNonSpace--
+    }
+    
+    if (lastNonSpace == length - 1) return this
+    
+    return substring(0, lastNonSpace + 1) + "⠀".repeat(length - lastNonSpace - 1)
 }
 
 private fun diffLine(line1: String, line2: String): String {
@@ -159,7 +166,7 @@ private fun diffLine(line1: String, line2: String): String {
     
     // First output all deletions
     for (i in diffStart1 until diffEnd1) {
-        builder.append("[-${line1[i]}-]")
+        builder.append(if (line1[i] == ' ') "[ -]" else "[-${line1[i]}-]")
     }
     
     // Then output all additions
