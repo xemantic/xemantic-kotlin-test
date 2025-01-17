@@ -267,7 +267,7 @@ class TextComparisonTest {
             │     <title>Test Page</title>
             │   </head>
             │   <body>
-            │     <div class=\"container\">
+            │     <div class="container">
             │       <h1>Hello World</h1>
             │       <p>This is a test.</p>
             │     </div>
@@ -278,10 +278,10 @@ class TextComparisonTest {
             │ <html>
             │   <head>
             │     <title>Test Page</title>
-            │     <meta charset=\"utf-8\">
+            │     <meta charset="utf-8">
             │   </head>
             │   <body>
-            │     <div class=\"main-container\">
+            │     <div class="main-container">
             │       <h1>Hello, World!</h1>
             │       <p>This is a test.</p>
             │     </div>
@@ -289,15 +289,15 @@ class TextComparisonTest {
             │ </html>
             └─ differences
               • structural: missing line after line 4
-                +     <meta charset=\"utf-8\">
+                +     <meta charset="utf-8">
               • line 7: strings differ
-                - actual:   \"    <div class=\"container\">\"
-                - expected: \"    <div class=\"main-container\">\"
-                - changes:  \"    <div class=\"[-c-][-o-][-n-][-t-][-a-][-i-][-n-][-e-][-r-]{+m+}{+a+}{+i+}{+n+}{+-+}{+c+}{+o+}{+n+}{+t+}{+a+}{+i+}{+n+}{+e+}{+r+}\">\"
+                - actual:   "    <div class="container">"
+                - expected: "    <div class="main-container">"
+                - changes:  "    <div class="[-c-][-o-][-n-][-t-][-a-][-i-][-n-][-e-][-r-]{+m+}{+a+}{+i+}{+n+}{+-+}{+c+}{+o+}{+n+}{+t+}{+a+}{+i+}{+n+}{+e+}{+r+}">"
               • line 8: strings differ
-                - actual:   \"      <h1>Hello World</h1>\"
-                - expected: \"      <h1>Hello, World!</h1>\"
-                - changes:  \"      <h1>Hello[-⠀-]{+,+}{+⠀+}World{+!+}</h1>\"
+                - actual:   "      <h1>Hello World</h1>"
+                - expected: "      <h1>Hello, World!</h1>"
+                - changes:  "      <h1>Hello[-⠀-]{+,+}{+⠀+}World{+!+}</h1>"
 
         """.trimIndent()
     )

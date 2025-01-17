@@ -62,7 +62,7 @@ public infix fun String.diff(other: String): String {
         builder.append("    - expected: \"${otherLines[0]}\"\n")
         builder.append("    - changes:  \"${diffLine(thisLines[0], otherLines[0])}\"\n")
     } else {
-        // Find matching blocks and similar lines
+        // Find matching blocks
         val matches = findMatchingBlocks(thisLines, otherLines)
         var thisIndex = 0
         var otherIndex = 0
@@ -73,26 +73,13 @@ public infix fun String.diff(other: String): String {
             while (thisIndex < match.thisStart || otherIndex < match.otherStart) {
                 when {
                     thisIndex >= match.thisStart && otherIndex < match.otherStart -> {
-                        // Check if there's a similar line to compare with
-                        val otherLine = otherLines[otherIndex]
-                        val similarLine = findSimilarLine(otherLine, thisLines, thisIndex)
-                        if (similarLine != null) {
-                            // Report as line difference
-                            builder.append("  • line $currentLine: strings differ\n")
-                            builder.append("    - actual:   \"${similarLine}\"\n")
-                            builder.append("    - expected: \"${otherLine}\"\n")
-                            builder.append("    - changes:  \"${diffLine(similarLine, otherLine)}\"\n")
-                            thisIndex++
-                            currentLine++
-                        } else {
-                            // Report as structural difference
-                            builder.append("  • structural: missing line after line ${currentLine - 1}\n")
-                            builder.append("    + ${otherLine}\n")
-                        }
+                        // Addition in other
+                        builder.append("  • structural: missing line after line ${currentLine - 1}\n")
+                        builder.append("    + ${otherLines[otherIndex]}\n")
                         otherIndex++
                     }
                     thisIndex < match.thisStart && otherIndex >= match.otherStart -> {
-                        // Skip deletions for now
+                        // Deletion in this - skip for now as we focus on additions
                         thisIndex++
                         currentLine++
                     }
@@ -150,21 +137,8 @@ public infix fun String.diff(other: String): String {
         
         // Handle remaining lines
         while (otherIndex < otherLines.size) {
-            val otherLine = otherLines[otherIndex]
-            val similarLine = findSimilarLine(otherLine, thisLines, thisIndex)
-            if (similarLine != null) {
-                // Report as line difference
-                builder.append("  • line $currentLine: strings differ\n")
-                builder.append("    - actual:   \"${similarLine}\"\n")
-                builder.append("    - expected: \"${otherLine}\"\n")
-                builder.append("    - changes:  \"${diffLine(similarLine, otherLine)}\"\n")
-                thisIndex++
-                currentLine++
-            } else {
-                // Report as structural difference
-                builder.append("  • structural: missing line after line ${currentLine - 1}\n")
-                builder.append("    + ${otherLine}\n")
-            }
+            builder.append("  • structural: missing line after line ${currentLine - 1}\n")
+            builder.append("    + ${otherLines[otherIndex]}\n")
             otherIndex++
         }
     }
@@ -173,31 +147,6 @@ public infix fun String.diff(other: String): String {
 }
 
 private data class Match(val thisStart: Int, val otherStart: Int, val length: Int)
-
-private fun findSimilarLine(line: String, lines: List<String>, startIndex: Int): String? {
-    // First try exact prefix match
-    val prefix = line.takeWhile { !it.isLetterOrDigit() }
-    val candidates = lines.drop(startIndex).take(3).filter { it.startsWith(prefix) }
-    
-    if (candidates.isEmpty()) return null
-    
-    // Find the most similar line
-    return candidates.minByOrNull { candidateLine ->
-        calculateDifference(line, candidateLine)
-    }
-}
-
-private fun calculateDifference(str1: String, str2: String): Int {
-    val words1 = str1.split(Regex("\\s+"))
-    val words2 = str2.split(Regex("\\s+"))
-    
-    var commonWords = 0
-    words1.forEach { word ->
-        if (words2.contains(word)) commonWords++
-    }
-    
-    return words1.size + words2.size - 2 * commonWords
-}
 
 private fun findMatchingBlocks(thisLines: List<String>, otherLines: List<String>): List<Match> {
     val matches = mutableListOf<Match>()
@@ -284,14 +233,13 @@ private fun String.visualizeTrailingSpaces(): String {
 }
 
 private fun diffLine(line1: String, line2: String): String {
-    // Find longest common prefix
+    // Find longest common prefix and suffix
     var prefixLen = 0
     val minLen = minOf(line1.length, line2.length)
     while (prefixLen < minLen && line1[prefixLen] == line2[prefixLen]) {
         prefixLen++
     }
     
-    // Find longest common suffix
     var suffixLen = 0
     while (suffixLen < minLen - prefixLen && 
            line1[line1.length - 1 - suffixLen] == line2[line2.length - 1 - suffixLen]) {
@@ -305,18 +253,18 @@ private fun diffLine(line1: String, line2: String): String {
         builder.append(line1.substring(0, prefixLen))
     }
     
-    // Output differences
-    val diff1 = line1.substring(prefixLen, line1.length - suffixLen)
-    val diff2 = line2.substring(prefixLen, line2.length - suffixLen)
+    // Handle the differing part character by character
+    val chars1 = line1.substring(prefixLen, line1.length - suffixLen).toList()
+    val chars2 = line2.substring(prefixLen, line2.length - suffixLen).toList()
     
     // First output all deletions
-    diff1.forEach { c ->
-        builder.append(if (c == ' ') "[ -]" else "[-$c-]")
+    chars1.forEach { c ->
+        builder.append(if (c == ' ') "[-⠀-]" else "[-$c-]")
     }
     
     // Then output all additions
-    diff2.forEach { c ->
-        builder.append(if (c == ' ') "{+ +}" else "{+$c+}")
+    chars2.forEach { c ->
+        builder.append(if (c == ' ') "{+⠀+}" else "{+$c+}")
     }
     
     // Add common suffix
