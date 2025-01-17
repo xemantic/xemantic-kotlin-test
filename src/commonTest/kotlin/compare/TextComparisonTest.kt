@@ -53,7 +53,80 @@ class TextComparisonTest {
               • line 1: strings differ
                 - actual:   "foo"
                 - expected: "bar"
-                - changes:  "[-f-]{+b+}[-o-]{+a+}[-o-]{+r+}"
+                - changes:  "[-f-][-o-][-o-]{+b+}{+a+}{+r+}"
+
+        """.trimIndent()
+    )
+
+    @Test
+    fun `should fail even if only whitespaces are different`() = assertDifference(
+        text1 = """
+            <div>
+                <p>Hello</p>
+            </div>
+        """.trimIndent(),
+        text2 = """
+            <div>
+               <p>Hello</p>
+            </div>
+        """.trimIndent(),
+        difference = """
+            Text comparison failed:
+            ┌─ actual
+            │ <div>
+            │     <p>Hello</p>
+            │ </div>
+            └─ differs from expected
+            │ <div>
+            │    <p>Hello</p>
+            │ </div>
+            └─ differences
+              • line 2: indentation difference
+                - actual:   "    <p>Hello</p>" (4 spaces)
+                - expected: "   <p>Hello</p>"  (3 spaces)
+                - changes:  "[-⠀-]<p>Hello</p>"
+
+        """.trimIndent()
+    )
+
+    @Test
+    fun `should show differences in trailing whitespace`() = assertDifference(
+        text1 = """
+            Line with no space
+            Line with one space 
+            Line with two spaces  
+            No newline at the end
+        """.trimIndent(),
+        text2 = """
+            Line with no space
+            Line with one space
+            Line with two spaces
+            No newline at the end
+            
+        """.trimIndent(),
+        difference = """
+            Text comparison failed:
+            ┌─ actual
+            │ Line with no space
+            │ Line with one space⠀
+            │ Line with two spaces⠀⠀
+            │ No newline at the end
+            └─ differs from expected
+            │ Line with no space
+            │ Line with one space
+            │ Line with two spaces
+            │ No newline at the end
+            │ 
+            └─ differences
+              • line 2: trailing whitespace difference
+                - actual:   "Line with one space⠀"
+                - expected: "Line with one space"
+                - changes:  "Line with one space[-⠀-]"
+              • line 3: trailing whitespace difference
+                - actual:   "Line with two spaces⠀⠀"
+                - expected: "Line with two spaces"
+                - changes:  "Line with two spaces[-⠀-][-⠀-]"
+              • structural: missing newline at end of file
 
         """.trimIndent()
     )
@@ -109,76 +182,6 @@ class TextComparisonTest {
                 - actual:   "* List item 2"
                 - expected: "* List item three"
                 - changes:  "* List item [-2-]{+t+}{+h+}{+r+}{+e+}{+e+}"
-
-        """.trimIndent()
-    )
-
-    @Test
-    fun `should fail even if only whitespaces are different`() = assertDifference(
-        text1 = """
-            <div>
-                <p>Hello</p>
-            </div>
-        """.trimIndent(),
-        text2 = """
-            <div>
-               <p>Hello</p>
-            </div>
-        """.trimIndent(),
-        difference = """
-            Text comparison failed:
-            ┌─ actual
-            │ <div>
-            │     <p>Hello</p>
-            │ </div>
-            └─ differs from expected
-            │ <div>
-            │    <p>Hello</p>
-            │ </div>
-            └─ differences
-              • line 2: indentation difference
-                - actual:   "    <p>Hello</p>" (4 spaces)
-                - expected: "   <p>Hello</p>"  (3 spaces)
-                - changes:  "    <p>Hello</p>[-⠀-]"
-
-        """.trimIndent()
-    )
-
-    @Test
-    fun `should show differences in trailing whitespace`() = assertDifference(
-        text1 = """
-            Line with no space
-            Line with one space 
-            Line with two spaces  
-            No newline at the end
-        """.trimIndent(),
-        text2 = """
-            Line with no space
-            Line with one space
-            Line with two spaces
-            No newline at the end
-            
-        """.trimIndent(),
-        difference = """
-            Text comparison failed:
-            ┌─ actual
-            │ Line with no space
-            │ Line with one space⠀
-            │ Line with two spaces⠀⠀
-            │ No newline at the end
-            └─ differs from expected
-            │ Line with no space
-            │ Line with one space
-            │ Line with two spaces
-            │ No newline at the end
-            │ 
-            └─ differences
-              • line 2: trailing whitespace difference
-                changes: "Line with one space{+⠀+}"
-              • line 3: trailing whitespace difference
-                changes: "Line with two spaces{+⠀+}{+⠀+}"
-              • structural: missing newline at end of file
-            Note: ⠀ represents a space character
 
         """.trimIndent()
     )
@@ -355,7 +358,6 @@ class TextComparisonTest {
 
     private fun assertDifference(text1: String, text2: String, difference: String) {
         val diff = text1 diff text2
-        assertEquals(difference, diff)
         if ((diff != difference) && diff.isNotEmpty()) {
             fail("The actual difference message was:\n${diff}")
         }

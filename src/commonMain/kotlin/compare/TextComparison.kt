@@ -57,16 +57,76 @@ public infix fun String.diff(other: String): String {
         
         for (i in 0 until minLines) {
             if (thisLines[i] != otherLines[i]) {
-                builder.append("  • line ${lineNumber}: strings differ\n")
-                builder.append("    - actual:   \"${thisLines[i]}\"\n")
-                builder.append("    - expected: \"${otherLines[i]}\"\n")
-                builder.append("    - changes:  \"${diffLine(thisLines[i], otherLines[i])}\"\n")
+                // Check if this is a whitespace-only difference
+                val thisNonSpace = thisLines[i].trimStart()
+                val otherNonSpace = otherLines[i].trimStart()
+                
+                if (thisNonSpace == otherNonSpace) {
+                    // Whitespace difference
+                    val thisSpaces = thisLines[i].countLeadingSpaces()
+                    val otherSpaces = otherLines[i].countLeadingSpaces()
+                    val spaceDiff = thisSpaces - otherSpaces
+                    
+                    builder.append("  • line ${lineNumber}: indentation difference\n")
+                    builder.append("    - actual:   \"${thisLines[i]}\" ($thisSpaces spaces)\n")
+                    builder.append("    - expected: \"${otherLines[i]}\"  ($otherSpaces spaces)\n")
+                    
+                    if (spaceDiff > 0) {
+                        // Extra spaces in actual
+                        builder.append("    - changes:  \"${
+                            "[-⠀-]".repeat(spaceDiff)}$thisNonSpace\"\n")
+                    } else {
+                        // Extra spaces in expected
+                        builder.append("    - changes:  \"${
+                            "{+⠀+}".repeat(-spaceDiff)}$thisNonSpace\"\n")
+                    }
+                } else if (thisLines[i].trim() == otherLines[i].trim() && 
+                          (thisLines[i].endsWith(" ") || otherLines[i].endsWith(" "))) {
+                    // Trailing whitespace difference
+                    val thisTrailing = thisLines[i].countTrailingSpaces()
+                    val otherTrailing = otherLines[i].countTrailingSpaces()
+                    
+                    builder.append("  • line ${lineNumber}: trailing whitespace difference\n")
+                    val nonSpace = thisLines[i].trim()
+                    builder.append("    - changes:  \"$nonSpace${
+                        if (thisTrailing > otherTrailing) "[-⠀-]".repeat(thisTrailing - otherTrailing)
+                        else "{+⠀+}".repeat(otherTrailing - thisTrailing)}\"\n")
+                } else {
+                    // Regular string difference
+                    builder.append("  • line ${lineNumber}: strings differ\n")
+                    builder.append("    - actual:   \"${thisLines[i]}\"\n")
+                    builder.append("    - expected: \"${otherLines[i]}\"\n")
+                    builder.append("    - changes:  \"${diffLine(thisLines[i], otherLines[i])}\"\n")
+                }
             }
             lineNumber++
+        }
+        
+        // Check for structural differences (missing or extra lines)
+        if (thisLines.size != otherLines.size) {
+            // Will be implemented for structural differences
         }
     }
     
     return builder.toString()
+}
+
+private fun String.countLeadingSpaces(): Int {
+    var count = 0
+    for (c in this) {
+        if (c == ' ') count++
+        else break
+    }
+    return count
+}
+
+private fun String.countTrailingSpaces(): Int {
+    var count = 0
+    for (i in length - 1 downTo 0) {
+        if (this[i] == ' ') count++
+        else break
+    }
+    return count
 }
 
 private fun diffLine(line1: String, line2: String): String {
@@ -99,11 +159,7 @@ private fun diffLine(line1: String, line2: String): String {
     
     // First output all deletions
     for (i in diffStart1 until diffEnd1) {
-        if (line1[i] == ' ') {
-            builder.append("[ -]")
-        } else {
-            builder.append("[-${line1[i]}-]")
-        }
+        builder.append("[-${line1[i]}-]")
     }
     
     // Then output all additions
