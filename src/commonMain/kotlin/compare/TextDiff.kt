@@ -48,14 +48,14 @@ public fun diff(original: String, revised: String): String {
 
     """.trimIndent()).append("\n")
     
-    // Output actual text
-    builder.append("┌─ actual\n")
+    // Output original text
+    builder.append("┌─ original\n")
     originalLines.forEach { line ->
         builder.append("│ ${line.visualizeTrailingSpaces()}\n")
     }
     
-    // Output expected text
-    builder.append("└─ differs from expected\n")
+    // Output revised text
+    builder.append("└─ differs from revised\n")
     revisedLines.forEach { line ->
         builder.append("│ ${line.visualizeTrailingSpaces()}\n")
     }
@@ -66,62 +66,62 @@ public fun diff(original: String, revised: String): String {
     if (originalLines.size == 1 && revisedLines.size == 1) {
         // Single line comparison
         builder.append("  • line 1: strings differ\n")
-        builder.append("    - actual:   \"${originalLines[0]}\"\n")
-        builder.append("    - expected: \"${revisedLines[0]}\"\n")
+        builder.append("    - original: \"${originalLines[0]}\"\n")
+        builder.append("    - revised:  \"${revisedLines[0]}\"\n")
         builder.append("    - changes:  \"${diffLine(originalLines[0], revisedLines[0])}\"\n")
     } else {
         // Find matching blocks
         val matches = findMatchingBlocks(originalLines, revisedLines)
-        var thisIndex = 0
-        var otherIndex = 0
+        var originalIndex = 0
+        var revisedIndex = 0
         var currentLine = 1
         
         matches.forEach { match ->
             // Handle differences before the match
-            while (thisIndex < match.thisStart || otherIndex < match.otherStart) {
+            while (originalIndex < match.originalStart || revisedIndex < match.revisedStart) {
                 when {
-                    thisIndex >= match.thisStart && otherIndex < match.otherStart -> {
-                        // Addition in other
+                    originalIndex >= match.originalStart && revisedIndex < match.revisedStart -> {
+                        // Addition in revised
                         builder.append("  • structural: missing line after line ${currentLine - 1}\n")
-                        builder.append("    + ${revisedLines[otherIndex]}\n")
-                        otherIndex++
+                        builder.append("    + ${revisedLines[revisedIndex]}\n")
+                        revisedIndex++
                     }
-                    thisIndex < match.thisStart && otherIndex >= match.otherStart -> {
-                        // Deletion in this - skip for now as we focus on additions
-                        thisIndex++
+                    originalIndex < match.originalStart && revisedIndex >= match.revisedStart -> {
+                        // Deletion in original - skip for now as we focus on additions
+                        originalIndex++
                         currentLine++
                     }
-                    thisIndex < match.thisStart && otherIndex < match.otherStart -> {
+                    originalIndex < match.originalStart && revisedIndex < match.revisedStart -> {
                         // Lines differ
-                        val thisLine = originalLines[thisIndex]
-                        val otherLine = revisedLines[otherIndex]
+                        val originalLine = originalLines[originalIndex]
+                        val revisedLine = revisedLines[revisedIndex]
                         
-                        if (thisLine.trim() == otherLine.trim()) {
-                            if (thisLine.countTrailingSpaces() != otherLine.countTrailingSpaces()) {
+                        if (originalLine.trim() == revisedLine.trim()) {
+                            if (originalLine.countTrailingSpaces() != revisedLine.countTrailingSpaces()) {
                                 // Trailing whitespace difference
                                 builder.append("  • line $currentLine: trailing whitespace difference\n")
-                                builder.append("    - actual:   \"${thisLine.visualizeTrailingSpaces()}\"\n")
-                                builder.append("    - expected: \"${otherLine.visualizeTrailingSpaces()}\"\n")
-                                val trailingDiff = thisLine.countTrailingSpaces() - otherLine.countTrailingSpaces()
-                                builder.append("    - changes:  \"${thisLine.trimEnd()}${
+                                builder.append("    - original: \"${originalLine.visualizeTrailingSpaces()}\"\n")
+                                builder.append("    - revised:  \"${revisedLine.visualizeTrailingSpaces()}\"\n")
+                                val trailingDiff = originalLine.countTrailingSpaces() - revisedLine.countTrailingSpaces()
+                                builder.append("    - changes:  \"${originalLine.trimEnd()}${
                                     "[-⠀-]".repeat(trailingDiff)}\"\n")
                             } else {
                                 // Indentation difference
-                                val thisSpaces = thisLine.countLeadingSpaces()
-                                val otherSpaces = otherLine.countLeadingSpaces()
+                                val originalSpaces = originalLine.countLeadingSpaces()
+                                val revisedSpaces = revisedLine.countLeadingSpaces()
                                 builder.append("  • line $currentLine: indentation difference\n")
-                                builder.append("    - actual:   \"${thisLine}\" ($thisSpaces spaces)\n")
-                                builder.append("    - expected: \"${otherLine}\"  ($otherSpaces spaces)\n")
-                                builder.append("    - changes:  \"[-⠀-]${thisLine.trimStart()}\"\n")
+                                builder.append("    - original: \"${originalLine}\" ($originalSpaces spaces)\n")
+                                builder.append("    - revised:  \"${revisedLine}\" ($revisedSpaces spaces)\n")
+                                builder.append("    - changes:  \"[-⠀-]${originalLine.trimStart()}\"\n")
                             }
                         } else {
                             builder.append("  • line $currentLine: strings differ\n")
-                            builder.append("    - actual:   \"${thisLine}\"\n")
-                            builder.append("    - expected: \"${otherLine}\"\n")
-                            builder.append("    - changes:  \"${diffLine(thisLine, otherLine)}\"\n")
+                            builder.append("    - original:   \"${originalLine}\"\n")
+                            builder.append("    - revised: \"${revisedLine}\"\n")
+                            builder.append("    - changes:  \"${diffLine(originalLine, revisedLine)}\"\n")
                         }
-                        thisIndex++
-                        otherIndex++
+                        originalIndex++
+                        revisedIndex++
                         currentLine++
                     }
                 }
@@ -129,79 +129,87 @@ public fun diff(original: String, revised: String): String {
             
             // Skip matching block
             repeat(match.length) {
-                if (originalLines[thisIndex] != revisedLines[otherIndex]) {
-                    val thisLine = originalLines[thisIndex]
-                    val otherLine = revisedLines[otherIndex]
+                if (originalLines[originalIndex] != revisedLines[revisedIndex]) {
+                    val originalLine = originalLines[originalIndex]
+                    val revisedLine = revisedLines[revisedIndex]
                     builder.append("  • line $currentLine: strings differ\n")
-                    builder.append("    - actual:   \"${thisLine}\"\n")
-                    builder.append("    - expected: \"${otherLine}\"\n")
-                    builder.append("    - changes:  \"${diffLine(thisLine, otherLine)}\"\n")
+                    builder.append("    - original: \"${originalLine}\"\n")
+                    builder.append("    - revised:  \"${revisedLine}\"\n")
+                    builder.append("    - changes:  \"${diffLine(originalLine, revisedLine)}\"\n")
                 }
-                thisIndex++
-                otherIndex++
+                originalIndex++
+                revisedIndex++
                 currentLine++
             }
         }
         
         // Handle remaining lines
-        while (otherIndex < revisedLines.size) {
+        while (revisedIndex < revisedLines.size) {
             builder.append("  • structural: missing line after line ${currentLine - 1}\n")
-            builder.append("    + ${revisedLines[otherIndex]}\n")
-            otherIndex++
+            builder.append("    + ${revisedLines[revisedIndex]}\n")
+            revisedIndex++
         }
     }
     
     return builder.toString()
 }
 
-private data class Match(val thisStart: Int, val otherStart: Int, val length: Int)
+private data class Match(
+    val originalStart: Int,
+    val revisedStart: Int,
+    val length: Int
+)
 
-private fun findMatchingBlocks(thisLines: List<String>, otherLines: List<String>): List<Match> {
+private fun findMatchingBlocks(
+    originalLines: List<String>,
+    revisedLines: List<String>
+): List<Match> {
+
     val matches = mutableListOf<Match>()
-    var thisIndex = 0
-    var otherIndex = 0
+    var originalIndex = 0
+    var revisedIndex = 0
     
-    while (thisIndex < thisLines.size && otherIndex < otherLines.size) {
-        if (thisLines[thisIndex] == otherLines[otherIndex]) {
+    while (originalIndex < originalLines.size && revisedIndex < revisedLines.size) {
+        if (originalLines[originalIndex] == revisedLines[revisedIndex]) {
             // Found a match, look for more matching lines
-            val startThis = thisIndex
-            val startOther = otherIndex
+            val startOriginal = originalIndex
+            val startRevised = revisedIndex
             var length = 0
             
-            while (thisIndex < thisLines.size && 
-                   otherIndex < otherLines.size && 
-                   thisLines[thisIndex] == otherLines[otherIndex]) {
-                thisIndex++
-                otherIndex++
+            while (originalIndex < originalLines.size &&
+                   revisedIndex < revisedLines.size &&
+                   originalLines[originalIndex] == revisedLines[revisedIndex]) {
+                originalIndex++
+                revisedIndex++
                 length++
             }
             
             if (length > 0) {
-                matches.add(Match(startThis, startOther, length))
+                matches.add(Match(startOriginal, startRevised, length))
             }
         } else {
             // Try to find next match
             var found = false
             for (lookAhead in 1..3) { // Limited look-ahead to avoid quadratic behavior
-                if (thisIndex + lookAhead < thisLines.size && 
-                    otherLines[otherIndex] == thisLines[thisIndex + lookAhead]) {
-                    // Found match in this, add unmatched lines from other
-                    thisIndex += lookAhead
+                if (originalIndex + lookAhead < originalLines.size &&
+                    revisedLines[revisedIndex] == originalLines[originalIndex + lookAhead]) {
+                    // Found match in original, add unmatched lines from revised
+                    originalIndex += lookAhead
                     found = true
                     break
                 }
-                if (otherIndex + lookAhead < otherLines.size && 
-                    thisLines[thisIndex] == otherLines[otherIndex + lookAhead]) {
-                    // Found match in other, add unmatched lines from this
-                    otherIndex += lookAhead
+                if (revisedIndex + lookAhead < revisedLines.size &&
+                    originalLines[originalIndex] == revisedLines[revisedIndex + lookAhead]) {
+                    // Found match in revised, add unmatched lines from original
+                    revisedIndex += lookAhead
                     found = true
                     break
                 }
             }
             if (!found) {
                 // No quick match found, move both indices
-                thisIndex++
-                otherIndex++
+                originalIndex++
+                revisedIndex++
             }
         }
     }
