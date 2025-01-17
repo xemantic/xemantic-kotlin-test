@@ -221,7 +221,7 @@ class TextDiffTest {
               • line 3: strings differ
                 - original: "This is a paragraph"
                 - revised:  "This is paragraph"
-                - changes:  "This is [-a-][ -]paragraph"
+                - changes:  "This is [-a-][-⠀-]paragraph"
               • line 4: strings differ
                 - original: "with two lines."
                 - revised:  "with 2 lines."
@@ -419,7 +419,7 @@ class TextDiffTest {
               • line 12: missing period at end of line
                 changes: "> with multiple lines{+.+}"
               • line 16: indentation and missing semicolon
-                changes: "[-⠀-][-⠀-][-⠀-][-⠀-]println("Hello"){+;+}"
+                changes: "[-⠀-][-⠀-][-⠀-][-⠀-]println(\"Hello\"){+;+}"
 
         """.trimIndent()
     )
