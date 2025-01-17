@@ -127,54 +127,32 @@ public fun diff(original: String, revised: String): String {
 private fun diffLine(str1: String, str2: String): String {
     val chars1 = str1.toList()
     val chars2 = str2.toList()
-    
-    val builder = StringBuilder()
+    val result = StringBuilder()
     var i = 0
     var j = 0
     
+    // Find common prefix
+    while (i < chars1.size && j < chars2.size && chars1[i] == chars2[j]) {
+        result.append(chars1[i])
+        i++
+        j++
+    }
+    
+    // Mark remaining characters
     while (i < chars1.size || j < chars2.size) {
-        if (i < chars1.size && j < chars2.size && chars1[i] == chars2[j]) {
-            builder.append(chars1[i])
+        // First deletions
+        if (i < chars1.size) {
+            result.append(if (chars1[i] == ' ') "[-⠀-]" else "[-${chars1[i]}-]")
             i++
-            j++
-            continue
         }
-        
-        // Handle deletions
-        if (i < chars1.size && (j >= chars2.size || !isPartOfMatch(chars1, chars2, i, j))) {
-            val c = chars1[i]
-            builder.append(if (c == ' ') "[-⠀-]" else "[-$c-]")
-            i++
-            continue
-        }
-        
-        // Handle additions
+        // Then additions
         if (j < chars2.size) {
-            val c = chars2[j]
-            builder.append(if (c == ' ') "{+⠀+}" else "{+$c+}")
+            result.append(if (chars2[j] == ' ') "{+⠀+}" else "{+${chars2[j]}+}")
             j++
         }
     }
     
-    return builder.toString()
-}
-
-private fun isPartOfMatch(chars1: List<Char>, chars2: List<Char>, pos1: Int, pos2: Int): Boolean {
-    val lookAhead = 3
-    for (k in 0 until lookAhead) {
-        if (pos1 + k < chars1.size && pos2 + k < chars2.size) {
-            if (chars1[pos1 + k] == chars2[pos2 + k]) {
-                // Found a potential match point, check if it's worth using
-                if (k == 0 || // immediate match
-                    k > 1 || // multiple character lookahead
-                    chars1[pos1] != ' ' && chars2[pos2] != ' ' // non-space characters
-                ) {
-                    return true
-                }
-            }
-        }
-    }
-    return false
+    return result.toString()
 }
 
 private fun String.countLeadingSpaces(): Int {

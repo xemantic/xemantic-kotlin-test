@@ -61,22 +61,18 @@ class TextDiffTest {
         difference = """
             Text comparison failed:
             Format description:
-            • [-c-] indicates character 'c' present in original text but not in revised
-            • {+c+} indicates character 'c' present in revised text but not in original
-            • ⠀ (braille pattern blank, U+2800) represents a space character in differences to make them visible
-            • Each character change is marked separately for precise difference tracking
-            • Line numbers are 1-based
-            • Structural changes show exact position of insertion or deletion
+            • [-c-] shows deleted character
+            • {+c+} shows added character
+            • ⠀ (U+2800) shows space character
+            • Changes are shown character by character
 
             ┌─ original
             │ foo
             └─ differs from revised
             │ bar
             └─ differences
-              • line 1: strings differ
-                - original: "foo"
-                - revised:  "bar"
-                - changes:  "[-f-]{+b+}[-o-]{+a+}[-o-]{+r+}"
+              • line 1: "foo" -> "bar"
+                - changes: "[-f-]{+b+}[-o-]{+a+}[-o-]{+r+}"
 
         """.trimIndent()
     )
@@ -99,12 +95,10 @@ class TextDiffTest {
         difference = """
             Text comparison failed:
             Format description:
-            • [-c-] indicates character 'c' present in original text but not in revised
-            • {+c+} indicates character 'c' present in revised text but not in original
-            • ⠀ (braille pattern blank, U+2800) represents a space character in differences to make them visible
-            • Each character change is marked separately for precise difference tracking
-            • Line numbers are 1-based
-            • Structural changes show exact position of insertion or deletion
+            • [-c-] shows deleted character
+            • {+c+} shows added character
+            • ⠀ (U+2800) shows space character
+            • Changes are shown character by character
 
             ┌─ original
             │ Line with no space
@@ -118,16 +112,12 @@ class TextDiffTest {
             │ No newline at the end
             │ 
             └─ differences
-              • line 2: strings differ
-                - original: "Line with one space⠀"
-                - revised:  "Line with one space"
-                - changes:  "Line with one space[-⠀-]"
-              • line 3: strings differ
-                - original: "Line with two spaces⠀⠀"
-                - revised:  "Line with two spaces"
-                - changes:  "Line with two spaces[-⠀-][-⠀-]"
-              • structural: missing line after line 4
-                + 
+              • line 2: "Line with one space⠀" -> "Line with one space"
+                - changes: "Line with one space[-⠀-]"
+              • line 3: "Line with two spaces⠀⠀" -> "Line with two spaces"
+                - changes: "Line with two spaces[-⠀-][-⠀-]"
+              • after line 4: "No newline at the end"
+                + ""
 
         """.trimIndent()
     )
@@ -147,12 +137,10 @@ class TextDiffTest {
         difference = """
             Text comparison failed:
             Format description:
-            • [-c-] indicates character 'c' present in original text but not in revised
-            • {+c+} indicates character 'c' present in revised text but not in original
-            • ⠀ (braille pattern blank, U+2800) represents a space character in differences to make them visible
-            • Each character change is marked separately for precise difference tracking
-            • Line numbers are 1-based
-            • Structural changes show exact position of insertion or deletion
+            • [-c-] shows deleted character
+            • {+c+} shows added character
+            • ⠀ (U+2800) shows space character
+            • Changes are shown character by character
 
             ┌─ original
             │ <div>
@@ -163,10 +151,8 @@ class TextDiffTest {
             │    <p>Hello</p>
             │ </div>
             └─ differences
-              • line 2: strings differ
-                - original: "    <p>Hello</p>"
-                - revised:  "   <p>Hello</p>"
-                - changes:  "[-⠀-]<p>Hello</p>"
+              • line 2: "    <p>Hello</p>" -> "   <p>Hello</p>"
+                - changes: "[-⠀-]<p>Hello</p>"
 
         """.trimIndent()
     )
@@ -194,12 +180,10 @@ class TextDiffTest {
         difference = """
             Text comparison failed:
             Format description:
-            • [-c-] indicates character 'c' present in original text but not in revised
-            • {+c+} indicates character 'c' present in revised text but not in original
-            • ⠀ (braille pattern blank, U+2800) represents a space character in differences to make them visible
-            • Each character change is marked separately for precise difference tracking
-            • Line numbers are 1-based
-            • Structural changes show exact position of insertion or deletion
+            • [-c-] shows deleted character
+            • {+c+} shows added character
+            • ⠀ (U+2800) shows space character
+            • Changes are shown character by character
 
             ┌─ original
             │ # Heading
@@ -218,18 +202,12 @@ class TextDiffTest {
             │ * List item 1
             │ * List item three
             └─ differences
-              • line 3: strings differ
-                - original: "This is a paragraph"
-                - revised:  "This is paragraph"
-                - changes:  "This is [-a-][-⠀-]paragraph"
-              • line 4: strings differ
-                - original: "with two lines."
-                - revised:  "with 2 lines."
-                - changes:  "with [-t-][-w-][-o-]{+2+}[-⠀-]{+⠀+}lines."
-              • line 7: strings differ
-                - original: "* List item 2"
-                - revised:  "* List item three"
-                - changes:  "* List item [-2-]{+t+}{+h+}{+r+}{+e+}{+e+}"
+              • line 3: "This is a paragraph" -> "This is paragraph"
+                - changes: "This is [-a-][-⠀-]paragraph"
+              • line 4: "with two lines." -> "with 2 lines."
+                - changes: "with [-t-][-w-][-o-]{+2+}[-⠀-]{+⠀+}lines."
+              • line 7: "* List item 2" -> "* List item three"
+                - changes: "* List item [-2-]{+t+}{+h+}{+r+}{+e+}{+e+}"
 
         """.trimIndent()
     )
@@ -268,12 +246,10 @@ class TextDiffTest {
         difference = """
             Text comparison failed:
             Format description:
-            • [-c-] indicates character 'c' present in original text but not in revised
-            • {+c+} indicates character 'c' present in revised text but not in original
-            • ⠀ (braille pattern blank, U+2800) represents a space character in differences to make them visible
-            • Each character change is marked separately for precise difference tracking
-            • Line numbers are 1-based
-            • Structural changes show exact position of insertion or deletion
+            • [-c-] shows deleted character
+            • {+c+} shows added character
+            • ⠀ (U+2800) shows space character
+            • Changes are shown character by character
 
             ┌─ original
             │ <!DOCTYPE html>
@@ -303,16 +279,12 @@ class TextDiffTest {
             │   </body>
             │ </html>
             └─ differences
-              • structural: missing line after line 4
-                +     <meta charset="utf-8">
-              • line 7: strings differ
-                - original: "    <div class=\"container\">"
-                - revised:  "    <div class=\"main-container\">"
-                - changes:  "    <div class=\"[-c-][-o-][-n-][-t-][-a-][-i-][-n-][-e-][-r-]{+m+}{+a+}{+i+}{+n+}{+-+}{+c+}{+o+}{+n+}{+t+}{+a+}{+i+}{+n+}{+e+}{+r+}\">"
-              • line 8: strings differ
-                - original: "      <h1>Hello World</h1>"
-                - revised:  "      <h1>Hello, World!</h1>"
-                - changes:  "      <h1>Hello[-⠀-]{+,+}{+⠀+}World{+!+}</h1>"
+              • after line 4: "    <title>Test Page</title>"
+                + "    <meta charset=\"utf-8\">"
+              • line 7: "    <div class=\"container\">" -> "    <div class=\"main-container\">"
+                - changes: "    <div class=\"[-c-][-o-][-n-][-t-][-a-][-i-][-n-][-e-][-r-]{+m+}{+a+}{+i+}{+n+}{+-+}{+c+}{+o+}{+n+}{+t+}{+a+}{+i+}{+n+}{+e+}{+r+}\">"
+              • line 8: "      <h1>Hello World</h1>" -> "      <h1>Hello, World!</h1>"
+                - changes: "      <h1>Hello[-⠀-]{+,+}{+⠀+}World{+!+}</h1>"
 
         """.trimIndent()
     )
@@ -364,12 +336,10 @@ class TextDiffTest {
         difference = """
             Text comparison failed:
             Format description:
-            • [-c-] indicates character 'c' present in original text but not in revised
-            • {+c+} indicates character 'c' present in revised text but not in original
-            • ⠀ (braille pattern blank, U+2800) represents a space character in differences to make them visible
-            • Each character change is marked separately for precise difference tracking
-            • Line numbers are 1-based
-            • Structural changes show exact position of insertion or deletion
+            • [-c-] shows deleted character
+            • {+c+} shows added character
+            • ⠀ (U+2800) shows space character
+            • Changes are shown character by character
 
             ┌─ original
             │ # Main Heading
@@ -412,22 +382,14 @@ class TextDiffTest {
             │ }
             │ ```
             └─ differences
-              • line 5: strings differ
-                - original: "This is a paragraph with *italic* and"
-                - revised:  "This is a paragraph with _italic_ and"
-                - changes:  "This is a paragraph with [-*-]{+_+}italic[-*-]{+_+} and"
-              • line 6: strings differ
-                - original: "**bold** text. It continues on the"
-                - revised:  "__bold__ text. It continues on the"
-                - changes:  "[-*-]{+_+}[-*-]{+_+}bold[-*-]{+_+}[-*-]{+_+} text. It continues on the"
-              • line 13: strings differ
-                - original: "> with multiple lines"
-                - revised:  "> with multiple lines."
-                - changes:  "> with multiple lines{+.+}"
-              • line 17: strings differ
-                - original: "    println(\"Hello\")"
-                - revised:  "  println(\"Hello\");"
-                - changes:  "  [-⠀-][-⠀-]println(\"Hello\"){+;+}"
+              • line 5: "This is a paragraph with *italic* and" -> "This is a paragraph with _italic_ and"
+                - changes: "This is a paragraph with [-*-]{+_+}italic[-*-]{+_+} and"
+              • line 6: "**bold** text. It continues on the" -> "__bold__ text. It continues on the"
+                - changes: "[-*-]{+_+}[-*-]{+_+}bold[-*-]{+_+}[-*-]{+_+} text. It continues on the"
+              • line 13: "> with multiple lines" -> "> with multiple lines."
+                - changes: "> with multiple lines{+.+}"
+              • line 17: "    println(\"Hello\")" -> "  println(\"Hello\");"
+                - changes: "  [-⠀-][-⠀-]println(\"Hello\"){+;+}"
 
         """.trimIndent()
     )
