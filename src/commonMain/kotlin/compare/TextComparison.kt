@@ -70,56 +70,51 @@ public infix fun String.diff(other: String): String {
 }
 
 private fun diffLine(line1: String, line2: String): String {
+    // Find the common prefix length
+    var prefixLength = 0
+    val minLength = minOf(line1.length, line2.length)
+    while (prefixLength < minLength && line1[prefixLength] == line2[prefixLength]) {
+        prefixLength++
+    }
+    
+    // Find the common suffix length
+    var suffixLength = 0
+    while (suffixLength < minLength - prefixLength &&
+           line1[line1.length - 1 - suffixLength] == line2[line2.length - 1 - suffixLength]) {
+        suffixLength++
+    }
+    
     val builder = StringBuilder()
-    var i = 0
-    var j = 0
     
-    // Buffers for grouping consecutive changes
-    val deletions = StringBuilder()
-    val additions = StringBuilder()
+    // Add common prefix
+    if (prefixLength > 0) {
+        builder.append(line1.substring(0, prefixLength))
+    }
     
-    fun flushChanges() {
-        if (deletions.isNotEmpty()) {
-            builder.append("[-${deletions}-]")
-            deletions.clear()
-        }
-        if (additions.isNotEmpty()) {
-            builder.append("{+${additions}+}")
-            additions.clear()
+    // Process the different parts
+    val diffStart1 = prefixLength
+    val diffEnd1 = line1.length - suffixLength
+    val diffStart2 = prefixLength
+    val diffEnd2 = line2.length - suffixLength
+    
+    // First output all deletions
+    for (i in diffStart1 until diffEnd1) {
+        if (line1[i] == ' ') {
+            builder.append("[ -]")
+        } else {
+            builder.append("[-${line1[i]}-]")
         }
     }
     
-    while (i < line1.length || j < line2.length) {
-        when {
-            i >= line1.length -> {
-                // Only additions left
-                additions.append(line2[j])
-                j++
-            }
-            j >= line2.length -> {
-                // Only deletions left
-                deletions.append(line1[i])
-                i++
-            }
-            line1[i] == line2[j] -> {
-                // Characters match - flush any pending changes and append the matching character
-                flushChanges()
-                builder.append(line1[i])
-                i++
-                j++
-            }
-            else -> {
-                // Characters differ - accumulate in respective buffers
-                deletions.append(line1[i])
-                additions.append(line2[j])
-                i++
-                j++
-            }
-        }
+    // Then output all additions
+    for (j in diffStart2 until diffEnd2) {
+        builder.append("{+${line2[j]}+}")
     }
     
-    // Flush any remaining changes
-    flushChanges()
+    // Add common suffix
+    if (suffixLength > 0) {
+        builder.append(line1.substring(line1.length - suffixLength))
+    }
     
     return builder.toString()
 }
