@@ -28,11 +28,6 @@ import kotlin.test.fail
  *
  * The output format is intended to be as easy as possible to process
  * by the Large Language Model (LLM) like Claude from Anthropic.
- * The format follows these principles:
- * 1. Changes are shown character by character for precise tracking
- * 2. Spaces are marked explicitly in change descriptions with [-␣-] and {+␣+}
- * 3. Changes include minimal necessary context
- * 4. Line additions and removals follow a consistent format
  *
  * Test cases are using various formats, like Markdown or HTML, however the difference
  * logic and produced description should be format agnostic by principle.
@@ -52,10 +47,10 @@ class TextDiffTest {
     fun `should have empty result if multiline string is the same as simple string`() {
         assert(
             diff(
-                """
-                foo
+                original = """
+                    foo
                 """.trimIndent(),
-                "foo"
+                revised = "foo"
             ).isEmpty()
         )
     }
@@ -67,8 +62,8 @@ class TextDiffTest {
         difference = """
             Text comparison failed:
             Format description:
-            • [-c-] shows deleted character
-            • {+c+} shows added character
+            • [-d-] shows deleted character
+            • [+a+] shows added character
             • Spaces are marked explicitly in changes
             • Changes are shown character by character
 
@@ -77,8 +72,7 @@ class TextDiffTest {
             └─ differs from revised
             │ bar
             └─ differences
-              • line 1: "foo" -> "bar"
-                - changes: "[-f-]{+b+}[-o-]{+a+}[-o-]{+r+}"
+              • line 1: [-f-][+b+][-o-][+a+][-o-][+r+]
 
         """.trimIndent()
     )
@@ -101,8 +95,8 @@ class TextDiffTest {
         difference = """
             Text comparison failed:
             Format description:
-            • [-c-] shows deleted character
-            • {+c+} shows added character
+            • [-d-] shows deleted character
+            • [+a+] shows added character
             • Spaces are marked explicitly in changes
             • Changes are shown character by character
 
@@ -118,12 +112,9 @@ class TextDiffTest {
             │ No newline at the end
             │ 
             └─ differences
-              • line 2: "Line with one space " -> "Line with one space"
-                - changes: "Line with one space[- -]"
-              • line 3: "Line with two spaces  " -> "Line with two spaces"
-                - changes: "Line with two spaces[- -][- -]"
-              • after line 4: "No newline at the end"
-                + ""
+              • line 2: Line with one space[- -]
+              • line 3: Line with two spaces[- -][- -]
+              • line 4: No newline at the end[+\n+]
 
         """.trimIndent()
     )
@@ -143,8 +134,8 @@ class TextDiffTest {
         difference = """
             Text comparison failed:
             Format description:
-            • [-c-] shows deleted character
-            • {+c+} shows added character
+            • [-d-] shows deleted character
+            • [+a+] shows added character
             • Spaces are marked explicitly in changes
             • Changes are shown character by character
 
@@ -157,8 +148,7 @@ class TextDiffTest {
             │    <p>Hello</p>
             │ </div>
             └─ differences
-              • line 2: "    <p>Hello</p>" -> "   <p>Hello</p>"
-                - changes: "[- -]<p>Hello</p>"
+              • line 2:    [- -]<p>Hello</p>
 
         """.trimIndent()
     )
@@ -186,8 +176,8 @@ class TextDiffTest {
         difference = """
             Text comparison failed:
             Format description:
-            • [-c-] shows deleted character
-            • {+c+} shows added character
+            • [-d-] shows deleted character
+            • [+a+] shows added character
             • Spaces are marked explicitly in changes
             • Changes are shown character by character
 
@@ -208,12 +198,9 @@ class TextDiffTest {
             │ * List item 1
             │ * List item three
             └─ differences
-              • line 3: "This is a paragraph" -> "This is paragraph"
-                - changes: "This is [-a-][- -]paragraph"
-              • line 4: "with two lines." -> "with 2 lines."
-                - changes: "with [-t-][-w-][-o-]{+2+}[- -]{+ +}lines."
-              • line 7: "* List item 2" -> "* List item three"
-                - changes: "* List item [-2-]{+t+}{+h+}{+r+}{+e+}{+e+}"
+              • line 3: This is [-a-][- -]paragraph
+              • line 4: with [-t-][+2+][-w-][-o-] lines.
+              • line 7: * List item [-2-][+t+][+h+][+r+][+e+][+e+]
 
         """.trimIndent()
     )
@@ -252,8 +239,8 @@ class TextDiffTest {
         difference = """
             Text comparison failed:
             Format description:
-            • [-c-] shows deleted character
-            • {+c+} shows added character
+            • [-d-] shows deleted character
+            • [+a+] shows added character
             • Spaces are marked explicitly in changes
             • Changes are shown character by character
 
@@ -285,12 +272,9 @@ class TextDiffTest {
             │   </body>
             │ </html>
             └─ differences
-              • after line 4: "    <title>Test Page</title>"
-                + "    <meta charset=\"utf-8\">"
-              • line 7: "    <div class=\"container\">" -> "    <div class=\"main-container\">"
-                - changes: "    <div class=\"[-c-][-o-][-n-][-t-][-a-][-i-][-n-][-e-][-r-]{+m+}{+a+}{+i+}{+n+}{+-+}{+c+}{+o+}{+n+}{+t+}{+a+}{+i+}{+n+}{+e+}{+r+}\">"
-              • line 8: "      <h1>Hello World</h1>" -> "      <h1>Hello, World!</h1>"
-                - changes: "      <h1>Hello[- -]{+,+}{+ +}World{+!+}</h1>"
+              • after line 4:     <meta charset="utf-8">
+              • line 7: <div class="[+m+][+a+][+i+][+n+][+-+]container">
+              • line 8: <h1>Hello[+,+] World[+!+]</h1>
 
         """.trimIndent()
     )
@@ -342,8 +326,8 @@ class TextDiffTest {
         difference = """
             Text comparison failed:
             Format description:
-            • [-c-] shows deleted character
-            • {+c+} shows added character
+            • [-d-] shows deleted character
+            • [+a+] shows added character
             • Spaces are marked explicitly in changes
             • Changes are shown character by character
 
@@ -388,14 +372,10 @@ class TextDiffTest {
             │ }
             │ ```
             └─ differences
-              • line 5: "This is a paragraph with *italic* and" -> "This is a paragraph with _italic_ and"
-                - changes: "This is a paragraph with [-*-]{+_+}italic[-*-]{+_+} and"
-              • line 6: "**bold** text. It continues on the" -> "__bold__ text. It continues on the"
-                - changes: "[-*-]{+_+}[-*-]{+_+}bold[-*-]{+_+}[-*-]{+_+} text. It continues on the"
-              • line 13: "> with multiple lines" -> "> with multiple lines."
-                - changes: "> with multiple lines{+.+}"
-              • line 17: "    println(\"Hello\")" -> "  println(\"Hello\");"
-                - changes: "[- -][- -]println(\"Hello\"){+;+}"
+              • line 5: This is a paragraph with [-*-][+_+]italic[-*-][+_+] and
+              • line 6: [-*-][+_+][-*-][+_+]bold[-*-][+_+][-*-][+_+] text. It continues on the
+              • line 13: > with multiple lines[+.+]
+              • line 17: [- -][- -]println("Hello")[+;+]
 
         """.trimIndent()
     )
@@ -406,6 +386,7 @@ class TextDiffTest {
         difference: String
     ) {
         val diff = diff(original, revised)
+        //assertEquals(difference, diff)
         if ((diff != difference) && diff.isNotEmpty()) {
             fail("The actual difference message was:\n${diff}")
         }
