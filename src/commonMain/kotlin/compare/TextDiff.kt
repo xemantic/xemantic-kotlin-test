@@ -62,6 +62,116 @@ public fun diff(
 
         append("└─ differences\n")
 
-        // TODO finish this implementation
+        // Compare lines and find differences
+        var i = 0
+        var j = 0
+
+        while (i < originalLines.size || j < revisedLines.size) {
+            when {
+                i >= originalLines.size -> {
+                    // Added lines at the end
+                    append("  • after line ${originalLines.size}: \"${originalLines.lastOrNull() ?: ""}\"\n")
+                    append("    + \"${revisedLines[j]}\"\n")
+                    j++
+                }
+                j >= revisedLines.size -> {
+                    // Removed lines at the end
+                    append("  • line ${i + 1}: \"${originalLines[i]}\" -> \"\"\n")
+                    append("    - changes: \"[-${originalLines[i].replace(" ", "[- -]")}-]\"\n")
+                    i++
+                }
+                else -> {
+                    val origLine = originalLines[i]
+                    val revLine = revisedLines[j]
+                    
+                    if (origLine != revLine) {
+                        append("  • line ${i + 1}: \"$origLine\" -> \"$revLine\"\n")
+                        append("    - changes: \"${compareCharacters(origLine, revLine)}\"\n")
+                    }
+                    i++
+                    j++
+                }
+            }
+        }
     }
+}
+
+private fun compareCharacters(original: String, revised: String): String {
+    if (original == revised) return original
+
+    val result = StringBuilder()
+    var i = 0
+    var j = 0
+    
+    while (i < original.length || j < revised.length) {
+        when {
+            i >= original.length -> {
+                // Add remaining characters from revised
+                while (j < revised.length) {
+                    val c = revised[j]
+                    result.append(if (c == ' ') "{+ +}" else "{+$c+}")
+                    j++
+                }
+            }
+            j >= revised.length -> {
+                // Remove remaining characters from original
+                while (i < original.length) {
+                    val c = original[i]
+                    result.append(if (c == ' ') "[- -]" else "[-$c-]")
+                    i++
+                }
+            }
+            original[i] == revised[j] -> {
+                // Characters match, keep them as is
+                result.append(original[i])
+                i++
+                j++
+            }
+            else -> {
+                // Characters differ
+                // Find the next matching point
+                var matchFound = false
+                var lookAhead = 1
+                while (!matchFound && 
+                       (i + lookAhead < original.length || j + lookAhead < revised.length)) {
+                    // Try to find match in revised
+                    if (i < original.length && j + lookAhead < revised.length && 
+                        original[i] == revised[j + lookAhead]) {
+                        // Add the inserted characters
+                        for (k in 0 until lookAhead) {
+                            val c = revised[j + k]
+                            result.append(if (c == ' ') "{+ +}" else "{+$c+}")
+                        }
+                        matchFound = true
+                        j += lookAhead
+                        continue
+                    }
+                    // Try to find match in original
+                    if (i + lookAhead < original.length && j < revised.length && 
+                        original[i + lookAhead] == revised[j]) {
+                        // Remove the deleted characters
+                        for (k in 0 until lookAhead) {
+                            val c = original[i + k]
+                            result.append(if (c == ' ') "[- -]" else "[-$c-]")
+                        }
+                        matchFound = true
+                        i += lookAhead
+                        continue
+                    }
+                    lookAhead++
+                }
+                if (!matchFound) {
+                    // No match found, treat as replacement
+                    val c1 = original[i]
+                    val c2 = revised[j]
+                    result.append(if (c1 == ' ') "[- -]" else "[-$c1-]")
+                    result.append(if (c2 == ' ') "{+ +}" else "{+$c2+}")
+                    i++
+                    j++
+                }
+            }
+        }
+    }
+    
+    return result.toString()
 }
