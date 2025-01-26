@@ -101,7 +101,7 @@ kotlin {
 
         commonTest {
             depencencies {
-                implementation("com.xemantic.kotlin:xemantic-kotlin-test:1.4.2")
+                implementation("com.xemantic.kotlin:xemantic-kotlin-test:1.8.2")
             }
         }
 
@@ -127,7 +127,7 @@ plugins {
 }
 
 dependencies {
-    testImplementation("com.xemantic.kotlin:xemantic-kotlin-test:1.4.2")
+    testImplementation("com.xemantic.kotlin:xemantic-kotlin-test:1.8.2")
 }
 
 powerAssert {
