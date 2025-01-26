@@ -1,5 +1,5 @@
+# Builds the release
 name: Build release
-description: Builds the release
 
 on:
   release:
