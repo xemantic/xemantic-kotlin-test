@@ -23,7 +23,7 @@ jobs:
         uses: gradle/actions/setup-gradle@v4.2.2
 
       - name: Build
-        run: ./gradlew build sourcesJar javadocJar sign publish
+        run: ./gradlew build sourcesJar javadocJar publish
         env:
           ORG_GRADLE_PROJECT_signingKey: ${{ secrets.SIGNING_KEY }}
           ORG_GRADLE_PROJECT_signingPassword: ${{ secrets.SIGNING_PASSWORD }}
