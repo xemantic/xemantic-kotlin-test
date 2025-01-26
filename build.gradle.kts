@@ -84,7 +84,7 @@ kotlin {
         apiVersion = kotlinTarget
         languageVersion = kotlinTarget
         freeCompilerArgs.add("-Xmulti-dollar-interpolation")
-        extraWarnings.set(true)
+        extraWarnings = true
         progressiveMode = true
     }
 
@@ -208,7 +208,7 @@ jreleaser {
             homepage = xemantic.homepageUrl
             documentation = xemantic.documentationUrl
         }
-        authors.set(xemantic.authorIds)
+        authors = xemantic.authorIds
     }
     deploy {
         maven {
