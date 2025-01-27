@@ -161,6 +161,10 @@ kotlin {
 
 tasks {
 
+    named("jreleaserFullRelease") {
+        dependsOn("publish")
+    }
+
     // skip tests which require XCode components to be installed
     named("tvosSimulatorArm64Test") { enabled = false }
     named("watchosSimulatorArm64Test") { enabled = false }
