@@ -42,7 +42,8 @@ jobs:
           JRELEASER_DISCORD_WEBHOOK: ${{ secrets.DISCORD_ANNOUCEMENTS_WEBHOOK }}
 #          JRELEASER_LINKEDIN_ACCESS_TOKEN: ${{ secrets.LINKEDIN_ACCESS_TOKEN }}
 #          JRELEASER_LINKEDIN_OWNER: ${{ secrets.LINKEDIN_OWNER }}
-          JRELEASER_BLUESKY_HANDLE: ${{ secrets.BLUESKY_HANDLE }}
+          JRELEASER_BLUESKY_HOST: ${{ vars.BLUESKY_HOST }}
+          JRELEASER_BLUESKY_HANDLE: ${{ vars.BLUESKY_HANDLE }}
           JRELEASER_BLUESKY_PASSWORD: ${{ secrets.BLUESKY_PASSWORD }}
 
         run: ./gradlew -Pversion=$VERSION build sourcesJar javadocJar publish jreleaserDeploy jreleaserAnnounce
