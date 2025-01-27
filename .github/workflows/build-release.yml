@@ -47,7 +47,7 @@ jobs:
           JRELEASER_BLUESKY_HANDLE: ${{ vars.BLUESKY_HANDLE }}
           JRELEASER_BLUESKY_PASSWORD: ${{ secrets.BLUESKY_PASSWORD }}
 
-        run: ./gradlew -Pversion=$VERSION build sourcesJar javadocJar publish jreleaserDeploy jreleaserAnnounce
+        run: ./gradlew -Pversion=$VERSION build sourcesJar javadocJar publish jreleaserFullRelease
 
       - name: Display JReleaser trace.log
 #      (only on failure)
