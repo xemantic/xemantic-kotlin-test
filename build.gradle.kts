@@ -261,5 +261,9 @@ jreleaser {
             subject = releaseAnnouncementSubject
             message = releaseAnnouncement
         }
+        bluesky {
+            active = Active.ALWAYS
+            status = releaseAnnouncement
+        }
     }
 }
