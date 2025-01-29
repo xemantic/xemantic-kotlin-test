@@ -1,7 +1,7 @@
 # xemantic-kotlin-test
 The power-assert compatible assertions DSL and some other testing goodies - a Kotlin multiplatform testing library.
 
-[<img alt="Maven Central Version" src="https://img.shields.io/maven-central/v/com.xemantic.kotlin/xemantic-kotlin-test">](https://central.sonatype.com/namespace/com.xemantic.kotlin)
+[<img alt="Maven Central Version" src="https://img.shields.io/maven-central/v/com.xemantic.kotlin/xemantic-kotlin-test">](https://central.sonatype.com/artifact/com.xemantic.kotlin/xemantic-kotlin-test)
 [<img alt="GitHub Release Date" src="https://img.shields.io/github/release-date/xemantic/xemantic-kotlin-test">](https://github.com/xemantic/xemantic-kotlin-test/releases)
 [<img alt="license" src="https://img.shields.io/github/license/xemantic/xemantic-kotlin-test?color=blue">](https://github.com/xemantic/xemantic-kotlin-test/blob/main/LICENSE)
 
