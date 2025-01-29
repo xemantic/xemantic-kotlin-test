@@ -161,10 +161,6 @@ kotlin {
 
 tasks {
 
-    named("jreleaserFullRelease") {
-        dependsOn("publish")
-    }
-
     // skip tests which require XCode components to be installed
     named("tvosSimulatorArm64Test") { enabled = false }
     named("watchosSimulatorArm64Test") { enabled = false }
@@ -249,7 +245,15 @@ jreleaser {
             skipRelease = true // we are releasing through GitHub UI
             skipTag = true
             token = "empty"
+            changelog {
+                enabled = false
+            }
         }
+    }
+    checksum {
+        individual = false
+        artifacts = false
+        files = false
     }
     announce {
         webhooks {
