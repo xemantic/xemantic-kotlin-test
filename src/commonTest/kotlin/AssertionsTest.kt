@@ -131,6 +131,7 @@ class AssertionsTest {
                 |     |  |
                 |     |  false
                 |     42
+                |     Message(id=42, content=[Text(text=Hello there), Image(path=image.png, width=1024, height=768, mediaType=MediaType(type=image/png))])
                 |
       """.trimMargin(),
             actual = exception.message
@@ -152,6 +153,7 @@ class AssertionsTest {
                 |     |       |
                 |     |       false
                 |     [Text(text=Hello there), Image(path=image.png, width=1024, height=768, mediaType=MediaType(type=image/png))]
+                |     Message(id=42, content=[Text(text=Hello there), Image(path=image.png, width=1024, height=768, mediaType=MediaType(type=image/png))])
                 |
       """.trimMargin(),
             actual = exception.message
@@ -202,6 +204,7 @@ class AssertionsTest {
                 |     |    |
                 |     |    false
                 |     image/png
+                |     MediaType(type=image/png)
                 |
       """.trimMargin(),
             actual = exception.message
