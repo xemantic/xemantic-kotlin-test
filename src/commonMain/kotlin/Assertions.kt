@@ -38,18 +38,7 @@ public infix fun <T> T?.should(block: T.() -> Unit) {
         callsInPlace(block, InvocationKind.EXACTLY_ONCE)
     }
     assertNotNull(this)
-    try {
-        block()
-    } catch (e: AssertionError) {
-        throw ShouldAssertionError(
-            message = if (e is ShouldAssertionError) {
-                "$this\n containing:\n${e.message}"
-            } else {
-                "$this\n should:${e.message}"
-            },
-            cause = e
-        )
-    }
+    block()
 }
 
 @OptIn(ExperimentalContracts::class)
@@ -58,9 +47,7 @@ public inline fun <reified T> Any?.be() {
         returns() implies (this@be is T)
     }
     if (this !is T) {
-        throw AssertionError(
-            " be of type <${typeOf<T>()}>, actual <${this!!::class}>"
-        )
+        asserter.fail("$this\n|- should be of type <${typeOf<T>()}>, actual <${this!!::class}>")
     }
 }
 
@@ -70,8 +57,3 @@ public fun have(
 ) {
     assertTrue(condition, message)
 }
-
-public class ShouldAssertionError(
-    message: String,
-    cause: AssertionError
-) : AssertionError(message, cause)

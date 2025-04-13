@@ -20,6 +20,7 @@ import kotlin.test.Test
 import kotlin.test.assertContains
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertNotNull
 
 class AssertionsTest {
 
@@ -113,7 +114,13 @@ class AssertionsTest {
                 be<String>()
             }
         }
-        assertContains(exception.message!!, "should: be of type")
+        assertNotNull(exception.message)
+        assertContains(exception.message!!,
+            """
+                |Message(id=42, content=[Text(text=Hello there), Image(path=image.png, width=1024, height=768, mediaType=MediaType(type=image/png))])
+                ||- should be of type
+            """.trimMargin()
+        )
     }
 
     @Test
@@ -125,15 +132,14 @@ class AssertionsTest {
         }
         assertEquals(
             expected = """
-                |Message(id=42, content=[Text(text=Hello there), Image(path=image.png, width=1024, height=768, mediaType=MediaType(type=image/png))])
-                | should:
+                |
                 |have(id == 0)
                 |     |  |
                 |     |  false
                 |     42
                 |     Message(id=42, content=[Text(text=Hello there), Image(path=image.png, width=1024, height=768, mediaType=MediaType(type=image/png))])
                 |
-      """.trimMargin(),
+            """.trimMargin(),
             actual = exception.message
         )
     }
@@ -147,21 +153,20 @@ class AssertionsTest {
         }
         assertEquals(
             expected = """
-                |Message(id=42, content=[Text(text=Hello there), Image(path=image.png, width=1024, height=768, mediaType=MediaType(type=image/png))])
-                | should:
+                |
                 |have(content.isEmpty())
                 |     |       |
                 |     |       false
                 |     [Text(text=Hello there), Image(path=image.png, width=1024, height=768, mediaType=MediaType(type=image/png))]
                 |     Message(id=42, content=[Text(text=Hello there), Image(path=image.png, width=1024, height=768, mediaType=MediaType(type=image/png))])
                 |
-      """.trimMargin(),
+            """.trimMargin(),
             actual = exception.message
         )
     }
 
     @Test
-    fun `Should fail when asserting wrong content type`() {
+    fun `Should fail when asserting wrong content type in nested should`() {
         val exception = assertFailsWith<AssertionError> {
             message should {
                 content[0] should {
@@ -169,14 +174,12 @@ class AssertionsTest {
                 }
             }
         }
-        assertContains(
-            exception.message!!,
-            $$"""
-                |Message(id=42, content=[Text(text=Hello there), Image(path=image.png, width=1024, height=768, mediaType=MediaType(type=image/png))])
-                | containing:
+        assertNotNull(exception.message)
+        assertContains(exception.message!!,
+            """
                 |Text(text=Hello there)
-                | should: be of type
-      """.trimMargin()
+                ||- should be of type
+            """.trimMargin()
         )
     }
 
@@ -194,12 +197,7 @@ class AssertionsTest {
         }
         assertEquals(
             expected = """
-                |Message(id=42, content=[Text(text=Hello there), Image(path=image.png, width=1024, height=768, mediaType=MediaType(type=image/png))])
-                | containing:
-                |Image(path=image.png, width=1024, height=768, mediaType=MediaType(type=image/png))
-                | containing:
-                |MediaType(type=image/png)
-                | should:
+                |
                 |have(type == "image/jpeg")
                 |     |    |
                 |     |    false
