@@ -15,3 +15,7 @@ public final class com/xemantic/kotlin/test/TestContext_jvmKt {
 	public static final fun isBrowserPlatform ()Z
 }
 
+public final class com/xemantic/kotlin/test/coroutines/SuspendShouldKt {
+	public static final fun should (Ljava/lang/Object;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
