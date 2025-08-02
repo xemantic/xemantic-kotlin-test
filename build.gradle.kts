@@ -85,17 +85,15 @@ kotlin {
         languageVersion = kotlinTarget
         freeCompilerArgs.add("-Xmulti-dollar-interpolation")
         extraWarnings = true
-        progressiveMode = true
+        // enable progressive when upgrading to Kotlin 2.2
+        //progressiveMode = true
     }
 
     jvm {
         // set up according to https://jakewharton.com/gradle-toolchains-are-rarely-a-good-idea/
         compilerOptions {
-            apiVersion = kotlinTarget
-            languageVersion = kotlinTarget
             jvmTarget = JvmTarget.fromTarget(javaTarget)
             freeCompilerArgs.add("-Xjdk-release=$javaTarget")
-            progressiveMode = true
         }
     }
 
@@ -152,6 +150,12 @@ kotlin {
         commonMain {
             dependencies {
                 implementation(libs.kotlin.test)
+            }
+        }
+
+        commonTest {
+            dependencies {
+                implementation(libs.kotlinx.coroutines.test)
             }
         }
 

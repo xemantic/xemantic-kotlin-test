@@ -77,7 +77,7 @@ class AssertionsTest {
 
 
     @Test
-    fun `Should pass all assertions on default message instance`() {
+    fun `should pass all assertions on default message instance`() {
         message should {
             have(id == 42)
             have(content.size == 2)
@@ -99,7 +99,7 @@ class AssertionsTest {
     }
 
     @Test
-    fun `Should fail when asserting on null object`() {
+    fun `should fail when asserting on null object`() {
         val nullMessage: Message? = null
         val exception = assertFailsWith<AssertionError> {
             nullMessage should {}
@@ -108,7 +108,7 @@ class AssertionsTest {
     }
 
     @Test
-    fun `Should fail when asserting wrong instance type`() {
+    fun `should fail when asserting wrong instance type`() {
         val exception = assertFailsWith<AssertionError> {
             message should {
                 be<String>()
@@ -124,7 +124,7 @@ class AssertionsTest {
     }
 
     @Test
-    fun `Should fail when asserting wrong message id`() {
+    fun `should fail when asserting wrong message id`() {
         val exception = assertFailsWith<AssertionError> {
             message should {
                 have(id == 0)
@@ -137,7 +137,6 @@ class AssertionsTest {
                 |     |  |
                 |     |  false
                 |     42
-                |     Message(id=42, content=[Text(text=Hello there), Image(path=image.png, width=1024, height=768, mediaType=MediaType(type=image/png))])
                 |
             """.trimMargin(),
             actual = exception.message
@@ -145,7 +144,7 @@ class AssertionsTest {
     }
 
     @Test
-    fun `Should fail when asserting empty message content`() {
+    fun `should fail when asserting empty message content`() {
         val exception = assertFailsWith<AssertionError> {
             message should {
                 have(content.isEmpty())
@@ -158,7 +157,6 @@ class AssertionsTest {
                 |     |       |
                 |     |       false
                 |     [Text(text=Hello there), Image(path=image.png, width=1024, height=768, mediaType=MediaType(type=image/png))]
-                |     Message(id=42, content=[Text(text=Hello there), Image(path=image.png, width=1024, height=768, mediaType=MediaType(type=image/png))])
                 |
             """.trimMargin(),
             actual = exception.message
@@ -166,7 +164,7 @@ class AssertionsTest {
     }
 
     @Test
-    fun `Should fail when asserting wrong content type in nested should`() {
+    fun `should fail when asserting wrong content type in nested should`() {
         val exception = assertFailsWith<AssertionError> {
             message should {
                 content[0] should {
@@ -184,7 +182,7 @@ class AssertionsTest {
     }
 
     @Test
-    fun `Should fail when asserting wrong message-image-mediaType`() {
+    fun `should fail when asserting wrong message-image-mediaType`() {
         val exception = assertFailsWith<AssertionError> {
             message should {
                 content[1] should {
@@ -202,7 +200,6 @@ class AssertionsTest {
                 |     |    |
                 |     |    false
                 |     image/png
-                |     MediaType(type=image/png)
                 |
       """.trimMargin(),
             actual = exception.message
@@ -210,7 +207,7 @@ class AssertionsTest {
     }
 
     @Test
-    fun `Should fail when assertion resolves to false`() {
+    fun `should fail when assertion resolves to false`() {
         val exception = assertFailsWith<AssertionError> {
             assert(2 + 2 == 2 + 3)
         }

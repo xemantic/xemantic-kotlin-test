@@ -1,5 +1,5 @@
 /*
- * Copyright 2024-2025 Kazimierz Pogoda / Xemantic
+ * Copyright 2025 Kazimierz Pogoda / Xemantic
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,26 +14,20 @@
  * limitations under the License.
  */
 
-package com.xemantic.kotlin.test
+package com.xemantic.kotlin.test.coroutines
 
-import kotlin.test.Test
+import kotlin.contracts.ExperimentalContracts
+import kotlin.contracts.InvocationKind
+import kotlin.contracts.contract
+import kotlin.test.assertNotNull
 
-class TestContextTest {
-
-    @Test
-    fun `should read gradleRootDir`() {
-        if (isBrowserPlatform) return // we don't have access to Gradle root dir
-        assert(gradleRootDir.isNotEmpty())
+@OptIn(ExperimentalContracts::class)
+public suspend infix fun <T> T?.should(
+    block: suspend T.() -> Unit
+) {
+    contract {
+        callsInPlace(block, InvocationKind.EXACTLY_ONCE)
     }
-
-    @Test
-    fun `should read predefined environment variable`() {
-        assert(getEnv("FOO") == "bar")
-    }
-
-    @Test
-    fun `should not read undefined environment variable`() {
-        assert(getEnv("BAR") == null)
-    }
-
+    assertNotNull(this)
+    block()
 }
