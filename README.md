@@ -189,6 +189,32 @@ complexObject should {
 }
 ```
 
+### String Comparison with Unified Diff
+
+For comparing strings, especially multiline text, use the `sameAs` function which provides unified diff output when strings don't match:
+
+```kotlin
+actualString sameAs expectedString
+```
+
+When the strings differ, `sameAs` produces clear diff output similar to git diff:
+
+```text
+--- expected
++++ actual
+@@ -1,3 +1,3 @@
+ line1
+-expected line2
++actual line2
+ line3
+```
+
+> [!NOTE]
+> The `sameAs` function is currently available only on JVM platform. It's particularly useful for:
+> - Comparing generated code or text output
+> - Validating formatted strings or templates
+> - Making differences in large text blocks easily visible to both humans and LLMs
+
 ### Test Context
 
 You can obtain access to the test context like:
