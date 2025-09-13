@@ -44,14 +44,11 @@ message should {
     have(content.size == 2)
     content[0] should {
         be<Text>()
-        have(type == "text")
         have("Hello" in text)
     }
     content[1] should {
         be<Image>()
-        have(type == "image")
-        have(width >= 800)
-        have(height >= 600)
+        have(width >= 800 && height >= 600)
         mediaType should {
             have(type == "image/png")
         }

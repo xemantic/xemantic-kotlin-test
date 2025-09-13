@@ -60,9 +60,8 @@ class AssertionsTest {
 
     /**
      * Message is our main test class - the root in hierarchical structure.
-     * It is nullable, because we also want to test if `should` works with nullable instances.
      */
-    val message: Message? = Message(
+    val message: Message = Message(
         id = 42,
         content = listOf(
             Text(text = "Hello there"),
@@ -209,6 +208,7 @@ class AssertionsTest {
     @Test
     fun `should fail when assertion resolves to false`() {
         val exception = assertFailsWith<AssertionError> {
+            @Suppress("SimplifyBooleanWithConstants")
             assert(2 + 2 == 2 + 3)
         }
         assertEquals(

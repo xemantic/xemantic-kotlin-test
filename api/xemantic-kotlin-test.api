@@ -6,6 +6,10 @@ public final class com/xemantic/kotlin/test/AssertionsKt {
 	public static final fun should (Ljava/lang/Object;Lkotlin/jvm/functions/Function1;)V
 }
 
+public final class com/xemantic/kotlin/test/SameAsKt {
+	public static final fun sameAs (Ljava/lang/String;Ljava/lang/String;)V
+}
+
 public final class com/xemantic/kotlin/test/TestContextKt {
 	public static final fun getGradleRootDir ()Ljava/lang/String;
 }
