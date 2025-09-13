@@ -80,13 +80,13 @@ kotlin {
 
     explicitApi()
 
+    coreLibrariesVersion = libs.versions.kotlin.get()
+
     compilerOptions {
         apiVersion = kotlinTarget
         languageVersion = kotlinTarget
-        freeCompilerArgs.add("-Xmulti-dollar-interpolation")
         extraWarnings = true
-        // enable progressive when upgrading to Kotlin 2.2
-        //progressiveMode = true
+        progressiveMode = true
     }
 
     jvm {

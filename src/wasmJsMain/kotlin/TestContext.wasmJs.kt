@@ -16,10 +16,12 @@
 
 package com.xemantic.kotlin.test
 
+@OptIn(ExperimentalWasmJsInterop::class)
 public actual fun getEnv(
     name: String
 ): String? = js("process.env[name]")
 
+@OptIn(ExperimentalWasmJsInterop::class)
 public actual val isBrowserPlatform: Boolean = js(
     "typeof window !== 'undefined'"
 )
