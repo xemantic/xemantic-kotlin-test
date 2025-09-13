@@ -132,7 +132,7 @@ class SameAsTest {
             }
         """.trimIndent()
 
-        val exception = assertFailsWith<AssertionError> {
+        assertFailsWith<AssertionError> {
             actual sameAs expected
         }.message sameAs """
             --- expected

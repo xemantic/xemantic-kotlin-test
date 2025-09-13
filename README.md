@@ -86,8 +86,8 @@ In your `build.gradle.kts`:
 
 ```kotlin
 plugins {
-    kotlin("multiplatform") version "2.1.0"
-    kotlin("plugin.power-assert") version "2.1.0" // replace with the latest kotlin version
+    kotlin("multiplatform") version "2.2.20"
+    kotlin("plugin.power-assert") version "2.2.20" // replace with the latest kotlin version
 }
 
 kotlin {
@@ -117,8 +117,8 @@ In your `build.gradle.kts`:
 
 ```kotlin
 plugins {
-    kotlin("jvm") version "2.1.0"
-    kotlin("plugin.power-assert") version "2.1.0" // replace with the latest kotlin version
+    kotlin("jvm") version "2.2.20"
+    kotlin("plugin.power-assert") version "2.2.20" // replace with the latest kotlin version
 }
 
 dependencies {
