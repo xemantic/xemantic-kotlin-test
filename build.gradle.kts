@@ -159,6 +159,12 @@ kotlin {
             }
         }
 
+        jvmMain {
+            dependencies {
+                implementation(libs.java.diff.utils)
+            }
+        }
+
     }
 
 }

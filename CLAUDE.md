@@ -48,8 +48,14 @@ This is **xemantic-kotlin-test**, a Kotlin multiplatform testing library that pr
 ./gradlew check                    # Run all verification tasks including tests and API checks
 ./gradlew jvmTest                  # Run JVM tests only
 ./gradlew jsTest                   # Run JS tests (browser + Node.js)
+./gradlew wasmJsTest               # Run WASM JS tests
+./gradlew wasmWasiTest             # Run WASM WASI tests
 ./gradlew macosX64Test             # Run native tests on macOS x64
+./gradlew macosArm64Test           # Run native tests on macOS ARM64
 ./gradlew linuxX64Test             # Run native tests on Linux x64
+./gradlew mingwX64Test             # Run native tests on Windows x64
+./gradlew iosSimulatorArm64Test    # Run native tests on iOS Simulator ARM64
+./gradlew iosX64Test               # Run native tests on iOS x64
 ```
 
 ### API Compatibility
@@ -68,6 +74,11 @@ This is **xemantic-kotlin-test**, a Kotlin multiplatform testing library that pr
 ```bash
 ./gradlew publishToMavenLocal      # Publish to local Maven repository
 ./gradlew publish                  # Publish all publications
+```
+
+### Maintenance
+```bash
+./gradlew dependencyUpdates        # Check for available dependency updates
 ```
 
 ## Power-Assert Configuration
