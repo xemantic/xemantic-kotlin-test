@@ -21,9 +21,20 @@ An AX-first (AI/Agent Experience) Kotlin multiplatform testing library with powe
 
 ## Why?
 
-I am mostly using [kotest](https://kotest.io/) library for writing test assertions in my projects.
-When [power-assert](https://kotlinlang.org/docs/power-assert.html) became the official Kotlin compiler plugin, I also realized that most of the kotest assertions can be replaced with something which suits my needs much better.
-Instead of writing:
+If you're writing code with AI agents, you've likely discovered that LLMs produce their best work when we reduce cognitive load. When meaning can be conveyed concisely in a semi-natural language flow, results improve dramatically. Markdown typically outperforms even minimal HTML because it's less cluttered with style and formatting noise. LLMs struggle when forced to multitask—like generating code while simultaneously escaping it for JSON. This library is AX-first: designed to minimize cognitive load in test cases, which also makes them excellent as model evals.
+
+My typical workflow looks like this:
+1. Write a single test case using this library
+2. Describe the problem domain and ask an AI agent to generate a comprehensive set of test cases following the same conventions
+3. Review, refine, and add edge cases until coverage is satisfactory
+4. In a fresh context window, have the agent implement the functionality
+
+Sometimes it takes minutes, sometimes it takes hours. An agent can produce thousands of lines of code, run tests, and try to fix errors in a long feedback loop session. Quite often I don't even look much at the implementation, trusting our shared TDD approach.
+
+In agentic loops, error reporting needs to be spot-on—providing maximum precision with minimal tokens. Typical unit test assertion libraries are designed for humans, not AI agents. It's easy for us to interpret a standard `assertEquals` failure rendered nicely in IntelliJ, but LLMs don't process this output the same way. This is why the library uses unified diff-based output when assertions fail, giving LLMs precise information on how to correct themselves.
+
+In the past I've been mostly using [kotest](https://kotest.io/) library for writing test assertions in my projects.
+When [power-assert](https://kotlinlang.org/docs/power-assert.html) became the official Kotlin compiler plugin, I also realized that most of the kotest assertions can be replaced with something which suits my needs much better, while being even easier for machines to digest. Instead of writing:
 
 ```kotlin
 x shouldBeGreaterThanOrEqualTo 42
