@@ -1,5 +1,6 @@
 # xemantic-kotlin-test
-The power-assert compatible assertions DSL and some other testing goodies - a Kotlin multiplatform testing library.
+
+An AX-first (AI/Agent Experience) Kotlin multiplatform testing library with power-assert compatible assertions DSL and other testing goodies.
 
 [<img alt="Maven Central Version" src="https://img.shields.io/maven-central/v/com.xemantic.kotlin/xemantic-kotlin-test">](https://central.sonatype.com/artifact/com.xemantic.kotlin/xemantic-kotlin-test)
 [<img alt="GitHub Release Date" src="https://img.shields.io/github/release-date/xemantic/xemantic-kotlin-test">](https://github.com/xemantic/xemantic-kotlin-test/releases)
