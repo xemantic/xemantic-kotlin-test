@@ -99,6 +99,11 @@ private sealed class DiffOperation {
 
 /**
  * Computes the diff between two lists of lines using Myers' diff algorithm.
+ *
+ * This implementation follows the standard Myers' algorithm, comparing lines by content only.
+ * Newline differences at end-of-file are handled separately during hunk generation, not here.
+ * However, when both sequences end at the same line position but have different newline status,
+ * we need to ensure that difference is captured in the edit script.
  */
 private fun computeDiff(
     expected: List<String>,
@@ -115,6 +120,7 @@ private fun computeDiff(
 
     for (d in 0..max) {
         for (k in -d..d step 2) {
+            // Determine whether to move down (insert) or right (delete)
             var x = if (k == -d || (k != d && v[max + k - 1] < v[max + k + 1])) {
                 v[max + k + 1]
             } else {
@@ -122,26 +128,21 @@ private fun computeDiff(
             }
             var y = x - k
 
+            // Extend diagonally as far as possible while lines match
+            // However, don't treat lines as equal if they have different newline status
             while (x < n && y < m && expected[x] == actual[y]) {
-                // Check if this is the last line and newline status differs
-                val isLastExpectedLine = (x == n - 1)
-                val isLastActualLine = (y == m - 1)
+                // Check if matching these lines would create a newline mismatch
+                val isLastExpected = (x == n - 1)
+                val isLastActual = (y == m - 1)
 
-                // If both are last lines, they can only be equal if newline status matches
-                if (isLastExpectedLine && isLastActualLine) {
-                    if (expectedEndsWithNewline != actualEndsWithNewline) {
-                        break // Don't treat as equal if newline status differs
+                // If one is last line and the other isn't, they have different implicit newline status
+                if (isLastExpected != isLastActual) {
+                    // Expected is last (no newline after if !expectedEndsWithNewline)
+                    // Actual is not last (has newline after)
+                    // OR vice versa - either way, they're different
+                    if ((isLastExpected && !expectedEndsWithNewline) || (isLastActual && !actualEndsWithNewline)) {
+                        break
                     }
-                }
-                // If expected is last but actual is not, and expected has no newline,
-                // they're not truly equal (expected line lacks newline, actual has it)
-                else if (isLastExpectedLine && !isLastActualLine && !expectedEndsWithNewline) {
-                    break
-                }
-                // If actual is last but expected is not, and actual has no newline,
-                // they're not truly equal
-                else if (!isLastExpectedLine && isLastActualLine && !actualEndsWithNewline) {
-                    break
                 }
 
                 x++
@@ -150,9 +151,10 @@ private fun computeDiff(
 
             v[max + k] = x
 
+            // Check if we've reached the end of both sequences
             if (x >= n && y >= m) {
                 trace.add(v.copyOf())
-                return backtrack(trace, expected, actual, max)
+                return backtrack(trace, expected, actual, max, expectedEndsWithNewline, actualEndsWithNewline)
             }
         }
         trace.add(v.copyOf())
@@ -163,8 +165,18 @@ private fun computeDiff(
 
 /**
  * Backtrack through the diff trace to construct the edit script.
+ *
+ * Walks backwards through the trace to reconstruct the sequence of operations
+ * (equal, delete, insert) that transforms expected into actual.
  */
-private fun backtrack(trace: List<IntArray>, expected: List<String>, actual: List<String>, max: Int): List<DiffOperation> {
+private fun backtrack(
+    trace: List<IntArray>,
+    expected: List<String>,
+    actual: List<String>,
+    max: Int,
+    expectedEndsWithNewline: Boolean,
+    actualEndsWithNewline: Boolean
+): List<DiffOperation> {
     var x = expected.size
     var y = actual.size
     val ops = mutableListOf<DiffOperation>()
@@ -182,12 +194,14 @@ private fun backtrack(trace: List<IntArray>, expected: List<String>, actual: Lis
         val prevX = v[max + prevK]
         val prevY = prevX - prevK
 
+        // Add equal operations for diagonal moves
         while (x > prevX && y > prevY) {
             ops.add(0, DiffOperation.Equal(x - 1, y - 1))
             x--
             y--
         }
 
+        // Add delete or insert operation for non-diagonal moves
         if (d > 0) {
             if (x > prevX) {
                 ops.add(0, DiffOperation.Delete(x - 1))
@@ -199,11 +213,32 @@ private fun backtrack(trace: List<IntArray>, expected: List<String>, actual: Lis
         }
     }
 
+    // If we've processed all lines but newline status differs, ensure the diff captures this.
+    // This is represented by having the final line marked as different in the hunk output.
+    if (expected.size == actual.size &&
+        expected.isNotEmpty() &&
+        expectedEndsWithNewline != actualEndsWithNewline) {
+        // The last line exists in both but with different newline status.
+        // If we have an Equal operation for the last line, we need to replace it with Delete+Insert
+        // to show the newline difference in the output.
+        val lastIndex = ops.lastIndex
+        if (lastIndex >= 0 && ops[lastIndex] is DiffOperation.Equal) {
+            val lastEqual = ops[lastIndex] as DiffOperation.Equal
+            if (lastEqual.oldIndex == expected.size - 1 && lastEqual.newIndex == actual.size - 1) {
+                ops[lastIndex] = DiffOperation.Delete(lastEqual.oldIndex)
+                ops.add(DiffOperation.Insert(lastEqual.newIndex))
+            }
+        }
+    }
+
     return ops
 }
 
 /**
  * Groups diff operations into hunks with context lines.
+ *
+ * Splits operations into separate hunks when there are more than context*2 consecutive
+ * equal lines, following standard unified diff behavior.
  */
 private fun generateHunks(
     ops: List<DiffOperation>,
@@ -256,9 +291,11 @@ private fun generateHunks(
         // End of hunk - include up to 'context' lines after the last change
         val hunkEnd = minOf(ops.size, lastChangeIndex + context + 1)
 
-        // Generate hunk
+        // Generate hunk using index range to avoid creating sublists
         val hunk = generateHunk(
-            ops.subList(hunkStart, hunkEnd),
+            ops,
+            hunkStart,
+            hunkEnd,
             expected,
             actual,
             expectedEndsWithNewline,
@@ -273,23 +310,45 @@ private fun generateHunks(
 }
 
 /**
- * Generates a single hunk string from a list of operations.
+ * Formats a hunk range according to unified diff convention.
+ * Returns "0,0" for empty, just the line number for single lines, or "start,count" for multiple lines.
+ */
+private fun formatHunkRange(startLine: Int, count: Int): String = when {
+    count == 0 -> "0,0"
+    count == 1 && startLine > 0 -> "$startLine"
+    else -> "$startLine,$count"
+}
+
+/**
+ * Generates a single hunk string from a range of operations.
+ *
+ * Outputs the hunk header followed by the diff lines with appropriate prefixes:
+ * - ' ' (space) for equal lines
+ * - '-' for deleted lines
+ * - '+' for inserted lines
+ * - '\ No newline at end of file' markers when appropriate
+ *
+ * @param ops the complete list of diff operations
+ * @param startIndex inclusive start index in the ops list
+ * @param endIndex exclusive end index in the ops list
  */
 private fun generateHunk(
     ops: List<DiffOperation>,
+    startIndex: Int,
+    endIndex: Int,
     expected: List<String>,
     actual: List<String>,
     expectedEndsWithNewline: Boolean,
     actualEndsWithNewline: Boolean
 ): String {
-    if (ops.isEmpty()) return ""
+    if (startIndex >= endIndex) return ""
 
     // Find the first line numbers in this hunk
     var oldStart = Int.MAX_VALUE
     var newStart = Int.MAX_VALUE
 
-    for (op in ops) {
-        when (op) {
+    for (i in startIndex until endIndex) {
+        when (val op = ops[i]) {
             is DiffOperation.Equal -> {
                 oldStart = minOf(oldStart, op.oldIndex)
                 newStart = minOf(newStart, op.newIndex)
@@ -303,85 +362,80 @@ private fun generateHunk(
         }
     }
 
-    // Count lines in each side
-    val oldCount = ops.count { it is DiffOperation.Delete || it is DiffOperation.Equal }
-    val newCount = ops.count { it is DiffOperation.Insert || it is DiffOperation.Equal }
+    // Count lines in each side within the range
+    var oldCount = 0
+    var newCount = 0
+    for (i in startIndex until endIndex) {
+        when (ops[i]) {
+            is DiffOperation.Delete, is DiffOperation.Equal -> oldCount++
+            is DiffOperation.Insert -> newCount++
+        }
+    }
+    // Adjust newCount to include Equal operations
+    for (i in startIndex until endIndex) {
+        if (ops[i] is DiffOperation.Equal) {
+            if (oldCount > 0 && newCount < oldCount) newCount++
+        }
+    }
+    // Recalculate properly
+    oldCount = 0
+    newCount = 0
+    for (i in startIndex until endIndex) {
+        val op = ops[i]
+        if (op is DiffOperation.Delete || op is DiffOperation.Equal) oldCount++
+        if (op is DiffOperation.Insert || op is DiffOperation.Equal) newCount++
+    }
 
     // Handle empty files - if no lines found, use 0 as start
     val oldStartLine = if (oldStart == Int.MAX_VALUE) 0 else oldStart + 1
     val newStartLine = if (newStart == Int.MAX_VALUE) 0 else newStart + 1
 
-    // Format the hunk header according to unified diff convention
-    val oldRange = when {
-        oldCount == 0 -> "0,0"
-        oldCount == 1 && oldStartLine > 0 -> "$oldStartLine"
-        else -> "$oldStartLine,$oldCount"
-    }
-    val newRange = when {
-        newCount == 0 -> "0,0"
-        newCount == 1 && newStartLine > 0 -> "$newStartLine"
-        else -> "$newStartLine,$newCount"
-    }
+    val oldRange = formatHunkRange(oldStartLine, oldCount)
+    val newRange = formatHunkRange(newStartLine, newCount)
 
     return buildString {
         append("@@ -$oldRange +$newRange @@\n")
 
-        // Track state for "No newline at end of file" markers
-        var lastOpWasDelete = false
-        var lastDeletedLineIsFileEnd = false
-        var pendingInsertMarker = false
+        // Output all diff lines in the range
+        var previousDeleteEndsFile = false
 
-        for (op in ops) {
-            when (op) {
+        for (i in startIndex until endIndex) {
+            val isLastInRange = i == endIndex - 1
+
+            when (val op = ops[i]) {
                 is DiffOperation.Equal -> {
-                    // Output any pending insert marker before the equal line
-                    if (pendingInsertMarker) {
-                        append("\\ No newline at end of file\n")
-                        pendingInsertMarker = false
-                    }
-                    lastOpWasDelete = false
                     append(" ${expected[op.oldIndex]}\n")
+                    previousDeleteEndsFile = false
                 }
                 is DiffOperation.Delete -> {
-                    // Output any pending insert marker before transitioning to delete
-                    if (pendingInsertMarker) {
-                        append("\\ No newline at end of file\n")
-                        pendingInsertMarker = false
-                    }
-                    lastOpWasDelete = true
-                    lastDeletedLineIsFileEnd = (op.oldIndex == expected.size - 1)
                     append("-${expected[op.oldIndex]}\n")
+                    // Check if this delete is at end of file and needs a marker
+                    val isFileEnd = op.oldIndex == expected.size - 1
+                    val needsMarker = isFileEnd && !expectedEndsWithNewline
+                    // Output marker immediately if next operation is not Insert
+                    val nextOp = if (i + 1 < endIndex) ops[i + 1] else null
+                    if (needsMarker && nextOp !is DiffOperation.Insert) {
+                        append("\\ No newline at end of file\n")
+                        previousDeleteEndsFile = false
+                    } else if (needsMarker) {
+                        previousDeleteEndsFile = true
+                    } else {
+                        previousDeleteEndsFile = false
+                    }
                 }
                 is DiffOperation.Insert -> {
-                    // Output delete marker if transitioning from delete to insert
-                    if (lastOpWasDelete && lastDeletedLineIsFileEnd && !expectedEndsWithNewline) {
+                    // If previous delete ended file without newline, output its marker now
+                    if (previousDeleteEndsFile) {
                         append("\\ No newline at end of file\n")
+                        previousDeleteEndsFile = false
                     }
-                    lastOpWasDelete = false
                     append("+${actual[op.newIndex]}\n")
-                    // Track if this insert needs a marker (will output later if needed)
-                    if (op.newIndex == actual.size - 1 && !actualEndsWithNewline) {
-                        pendingInsertMarker = true
-                    }
-                }
-            }
-        }
-
-        // Output any remaining markers at the end of the hunk
-        if (ops.isNotEmpty()) {
-            when (val lastOp = ops.last()) {
-                is DiffOperation.Delete -> {
-                    if (lastOp.oldIndex == expected.size - 1 && !expectedEndsWithNewline) {
+                    // If this insert is at end of file without newline, output marker if last in range
+                    val isFileEnd = op.newIndex == actual.size - 1
+                    val needsMarker = isFileEnd && !actualEndsWithNewline
+                    if (needsMarker && isLastInRange) {
                         append("\\ No newline at end of file\n")
                     }
-                }
-                is DiffOperation.Insert -> {
-                    if (lastOp.newIndex == actual.size - 1 && !actualEndsWithNewline) {
-                        append("\\ No newline at end of file\n")
-                    }
-                }
-                is DiffOperation.Equal -> {
-                    // No marker needed if hunk ends with equal
                 }
             }
         }

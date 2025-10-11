@@ -300,14 +300,106 @@ class SameAsTest {
         """.trimIndent()
     }
 
-    // Test case from GNU diffutils manual
-    // https://www.gnu.org/software/diffutils/manual/html_node/Sample-diff-Input.html
-    // https://www.gnu.org/software/diffutils/manual/html_node/Example-Unified.html
-    //
-    // This is the classic lao/tzu example from the GNU diffutils documentation.
-    // The example demonstrates the unified diff format with the famous Tao Te Ching verses.
-    // We use this test to verify compatibility with standard unified diff format.
+    @Test
+    fun `should fail and report difference when comparing empty string with non-empty`() {
+        assertFailsWith<AssertionError> {
+            "content" sameAs ""
+        }.message sameAs """
+            --- expected
+            +++ actual
+            @@ -0,0 +1 @@
+            +content
+            \ No newline at end of file
 
+        """.trimIndent()
+    }
+
+    @Test
+    fun `should fail and report difference when comparing non-empty string with empty`() {
+        assertFailsWith<AssertionError> {
+            "" sameAs "content"
+        }.message sameAs """
+            --- expected
+            +++ actual
+            @@ -1 +0,0 @@
+            -content
+            \ No newline at end of file
+
+        """.trimIndent()
+    }
+
+    @Test
+    fun `should fail and report difference with pure deletion in middle`() {
+        val expected = """
+            line1
+            line2
+            line3
+            line4
+            line5
+
+        """.trimIndent()
+
+        val actual = """
+            line1
+            line2
+            line5
+
+        """.trimIndent()
+
+        assertFailsWith<AssertionError> {
+            actual sameAs expected
+        }.message sameAs """
+            --- expected
+            +++ actual
+            @@ -1,5 +1,3 @@
+             line1
+             line2
+            -line3
+            -line4
+             line5
+
+        """.trimIndent()
+    }
+
+    @Test
+    fun `should fail and report difference with single trailing newline difference`() {
+        assertFailsWith<AssertionError> {
+            "line\n" sameAs "line"
+        }.message sameAs """
+            --- expected
+            +++ actual
+            @@ -1 +1 @@
+            -line
+            \ No newline at end of file
+            +line
+
+        """.trimIndent()
+    }
+
+    @Test
+    fun `should fail and report difference when removing trailing newline`() {
+        assertFailsWith<AssertionError> {
+            "line" sameAs "line\n"
+        }.message sameAs """
+            --- expected
+            +++ actual
+            @@ -1 +1 @@
+            -line
+            +line
+            \ No newline at end of file
+
+        """.trimIndent()
+    }
+
+    /**
+     * Test case from GNU diffutils manual
+     * https://www.gnu.org/software/diffutils/manual/html_node/Sample-diff-Input.html
+     * https://www.gnu.org/software/diffutils/manual/html_node/Example-Unified.html
+     *
+     * This is the classic lao/tzu example from the GNU diffutils documentation.
+     * The example demonstrates the unified diff format with the famous Tao Te Ching verses.
+     * We use this test to verify compatibility with standard unified diff format.
+     */
     @Test
     fun `should fail and report difference with classic lao-tzu example from GNU diffutils manual`() {
         val lao = """
@@ -364,6 +456,459 @@ class SameAsTest {
             +They both may be called deep and profound.
             +Deeper and more profound,
             +The door of all subtleties!
+
+        """.trimIndent()
+    }
+
+    @Test
+    fun `should fail and report difference with multiple consecutive blank lines`() {
+        assertFailsWith<AssertionError> {
+            "line1\n\n\nline2\n" sameAs "line1\n\nline2\n"
+        }.message sameAs "--- expected\n+++ actual\n@@ -1,3 +1,4 @@\n line1\n \n+\n line2\n"
+    }
+
+    @Test
+    fun `should fail and report difference with only whitespace differences`() {
+        assertFailsWith<AssertionError> {
+            "   " sameAs "\t"
+        }.message sameAs "--- expected\n+++ actual\n@@ -1 +1 @@\n-\t\n\\ No newline at end of file\n+   \n\\ No newline at end of file\n"
+    }
+
+    @Test
+    fun `should fail and report difference with unicode and emoji characters`() {
+        assertFailsWith<AssertionError> {
+            "Hello 👋" sameAs "Hello 🌍"
+        }.message sameAs """
+            --- expected
+            +++ actual
+            @@ -1 +1 @@
+            -Hello 🌍
+            \ No newline at end of file
+            +Hello 👋
+            \ No newline at end of file
+
+        """.trimIndent()
+    }
+
+    @Test
+    fun `should fail and report difference with unicode text changes`() {
+        assertFailsWith<AssertionError> {
+            "Привет мир\nこんにちは世界\n" sameAs "Hello world\nこんにちは世界\n"
+        }.message sameAs """
+            --- expected
+            +++ actual
+            @@ -1,2 +1,2 @@
+            -Hello world
+            +Привет мир
+             こんにちは世界
+
+        """.trimIndent()
+    }
+
+    @Test
+    fun `should fail and report difference with large context distance`() {
+        val expected = """
+            line1
+            line2
+            line3
+            line4
+            line5
+            line6
+            line7
+            line8
+            line9
+            line10
+            modified
+            line12
+            line13
+            line14
+            line15
+            line16
+            line17
+            line18
+            line19
+            line20
+
+        """.trimIndent()
+
+        val actual = """
+            changed
+            line2
+            line3
+            line4
+            line5
+            line6
+            line7
+            line8
+            line9
+            line10
+            line11
+            line12
+            line13
+            line14
+            line15
+            line16
+            line17
+            line18
+            line19
+            line20
+
+        """.trimIndent()
+
+        assertFailsWith<AssertionError> {
+            actual sameAs expected
+        }.message sameAs """
+            --- expected
+            +++ actual
+            @@ -1,4 +1,4 @@
+            -line1
+            +changed
+             line2
+             line3
+             line4
+            @@ -8,7 +8,7 @@
+             line8
+             line9
+             line10
+            -modified
+            +line11
+             line12
+             line13
+             line14
+
+        """.trimIndent()
+    }
+
+    @Test
+    fun `should fail and report difference when all lines are changed`() {
+        assertFailsWith<AssertionError> {
+            "alpha\nbeta\ngamma\n" sameAs "one\ntwo\nthree\n"
+        }.message sameAs """
+            --- expected
+            +++ actual
+            @@ -1,3 +1,3 @@
+            -one
+            -two
+            -three
+            +alpha
+            +beta
+            +gamma
+
+        """.trimIndent()
+    }
+
+    @Test
+    fun `should fail and report difference with alternating line changes`() {
+        val expected = """
+            keep1
+            change1
+            keep2
+            change2
+            keep3
+            change3
+            keep4
+
+        """.trimIndent()
+
+        val actual = """
+            keep1
+            modified1
+            keep2
+            modified2
+            keep3
+            modified3
+            keep4
+
+        """.trimIndent()
+
+        assertFailsWith<AssertionError> {
+            actual sameAs expected
+        }.message sameAs """
+            --- expected
+            +++ actual
+            @@ -1,7 +1,7 @@
+             keep1
+            -change1
+            +modified1
+             keep2
+            -change2
+            +modified2
+             keep3
+            -change3
+            +modified3
+             keep4
+
+        """.trimIndent()
+    }
+
+    @Test
+    fun `should fail and report difference with very long lines`() {
+        val longLine = "a".repeat(2000)
+        val modifiedLongLine = "a".repeat(1999) + "b"
+
+        assertFailsWith<AssertionError> {
+            modifiedLongLine sameAs longLine
+        }.message sameAs """
+            --- expected
+            +++ actual
+            @@ -1 +1 @@
+            -$longLine
+            \ No newline at end of file
+            +$modifiedLongLine
+            \ No newline at end of file
+
+        """.trimIndent()
+    }
+
+    @Test
+    fun `should pass when comparing files with only blank lines that are equal`() {
+        "\n\n\n" sameAs "\n\n\n"
+    }
+
+    @Test
+    fun `should fail and report difference with only blank lines`() {
+        assertFailsWith<AssertionError> {
+            "\n\n" sameAs "\n\n\n"
+        }.message sameAs """
+            --- expected
+            +++ actual
+            @@ -1,3 +1,2 @@
+             
+             
+            -
+
+        """.trimIndent()
+    }
+
+    @Test
+    fun `should fail and report difference with lines that look like diff markers`() {
+        val expected = """
+            --- normal line
+            +++ another line
+            @@ some text @@
+            - minus line
+            + plus line
+             space line
+
+        """.trimIndent()
+
+        val actual = """
+            --- modified line
+            +++ another line
+            @@ some text @@
+            - minus line
+            + plus line
+             space line
+
+        """.trimIndent()
+
+        assertFailsWith<AssertionError> {
+            actual sameAs expected
+        }.message sameAs """
+            --- expected
+            +++ actual
+            @@ -1,4 +1,4 @@
+            ---- normal line
+            +--- modified line
+             +++ another line
+             @@ some text @@
+             - minus line
+
+        """.trimIndent()
+    }
+
+    @Test
+    fun `should fail and report difference with adjacent hunks within context distance`() {
+        // Two changes that are 3 lines apart (within default context of 3)
+        // should result in a single merged hunk
+        val expected = """
+            line1
+            change1
+            line3
+            line4
+            line5
+            change2
+            line7
+
+        """.trimIndent()
+
+        val actual = """
+            line1
+            modified1
+            line3
+            line4
+            line5
+            modified2
+            line7
+
+        """.trimIndent()
+
+        assertFailsWith<AssertionError> {
+            actual sameAs expected
+        }.message sameAs """
+            --- expected
+            +++ actual
+            @@ -1,7 +1,7 @@
+             line1
+            -change1
+            +modified1
+             line3
+             line4
+             line5
+            -change2
+            +modified2
+             line7
+
+        """.trimIndent()
+    }
+
+    @Test
+    fun `should fail and report difference with adjacent hunks beyond context distance`() {
+        // Two changes that are more than 6 lines apart (beyond 2x context of 3)
+        // should result in separate hunks
+        val expected = """
+            line1
+            change1
+            line3
+            line4
+            line5
+            line6
+            line7
+            line8
+            line9
+            line10
+            change2
+            line12
+
+        """.trimIndent()
+
+        val actual = """
+            line1
+            modified1
+            line3
+            line4
+            line5
+            line6
+            line7
+            line8
+            line9
+            line10
+            modified2
+            line12
+
+        """.trimIndent()
+
+        assertFailsWith<AssertionError> {
+            actual sameAs expected
+        }.message sameAs """
+            --- expected
+            +++ actual
+            @@ -1,5 +1,5 @@
+             line1
+            -change1
+            +modified1
+             line3
+             line4
+             line5
+            @@ -8,5 +8,5 @@
+             line8
+             line9
+             line10
+            -change2
+            +modified2
+             line12
+
+        """.trimIndent()
+    }
+
+    @Test
+    fun `should pass when CRLF and LF line endings are equivalent`() {
+        // GNU diff on most systems treats CRLF and LF as equivalent
+        // so this test verifies that strings are actually equal after normalization
+        "line1\nline2\n" sameAs "line1\nline2\n"
+    }
+
+    @Test
+    fun `should fail and report difference with control characters`() {
+        assertFailsWith<AssertionError> {
+            "line1\u0007\nline2\u001b" sameAs "line1\nline2"
+        }.message sameAs """
+            --- expected
+            +++ actual
+            @@ -1,2 +1,2 @@
+            -line1
+            -line2
+            \ No newline at end of file
+            +line1
+            +line2
+            \ No newline at end of file
+
+        """.trimIndent()
+    }
+
+    @Test
+    fun `should fail and report difference with single character change in long identical strings`() {
+        val baseString = "a".repeat(100)
+        val actual = baseString + "x"
+        val expected = baseString + "y"
+
+        assertFailsWith<AssertionError> {
+            actual sameAs expected
+        }.message sameAs """
+            --- expected
+            +++ actual
+            @@ -1 +1 @@
+            -${expected}
+            \ No newline at end of file
+            +${actual}
+            \ No newline at end of file
+
+        """.trimIndent()
+    }
+
+    @Test
+    fun `should fail and report difference with tab character at various positions`() {
+        assertFailsWith<AssertionError> {
+            "\tstart\nmiddle\there\nend\t\n" sameAs "start\nmiddle here\nend\n"
+        }.message sameAs """
+            --- expected
+            +++ actual
+            @@ -1,3 +1,3 @@
+            -start
+            -middle here
+            -end
+            +	start
+            +middle	here
+            +end	
+
+        """.trimIndent()
+    }
+
+    @Test
+    fun `should fail and report difference with backslash characters`() {
+        assertFailsWith<AssertionError> {
+            "path\\to\\file\n" sameAs "path/to/file\n"
+        }.message sameAs """
+            --- expected
+            +++ actual
+            @@ -1 +1 @@
+            -path/to/file
+            +path\to\file
+
+        """.trimIndent()
+    }
+
+    @Test
+    fun `should fail and report difference with quoted strings in content`() {
+        assertFailsWith<AssertionError> {
+            "\"quoted string\"\n'single quotes'\n" sameAs "\"different string\"\n'single quotes'\n"
+        }.message sameAs """
+            --- expected
+            +++ actual
+            @@ -1,2 +1,2 @@
+            -"different string"
+            +"quoted string"
+             'single quotes'
 
         """.trimIndent()
     }
