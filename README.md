@@ -221,12 +221,6 @@ When the strings differ, `sameAs` produces clear diff output similar to git diff
  line3
 ```
 
-> [!NOTE]
-> The `sameAs` function is currently available only on JVM platform. It's particularly useful for:
-> - Comparing generated code or text output
-> - Validating formatted strings or templates
-> - Making differences in large text blocks easily visible to both humans and LLMs
-
 ### Test Context
 
 You can obtain access to the test context like:
