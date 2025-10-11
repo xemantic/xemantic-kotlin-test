@@ -38,33 +38,40 @@ public infix fun String?.sameAs(expected: String) {
 }
 
 /**
+ * Splits a string into lines for diff processing.
+ *
+ * The standard [String.lines] function adds a trailing empty string when the string ends with \n.
+ * This helper removes that trailing empty string to get the actual line content.
+ */
+private fun String.splitLinesForDiff(): List<String> = when {
+    isEmpty() -> emptyList()
+    else -> {
+        val lines = lines()
+        // If string ends with newline, lines() adds ONE trailing empty string - remove only that one
+        if (endsWith('\n') && lines.isNotEmpty() && lines.last() == "") {
+            lines.dropLast(1)
+        } else {
+            lines
+        }
+    }
+}
+
+/**
  * Generates a unified diff between expected and actual strings.
+ *
+ * Uses Myers' diff algorithm to compute the minimal set of changes between the two strings,
+ * then formats the output in unified diff format (similar to GNU diff -u). This format is
+ * particularly well-suited for LLMs to understand and process changes.
+ *
+ * The unified diff format shows:
+ * - Lines prefixed with `-` are from the expected string (deleted/changed)
+ * - Lines prefixed with `+` are from the actual string (inserted/changed)
+ * - Lines prefixed with ` ` (space) are context lines (unchanged)
+ * - `\ No newline at end of file` markers when lines lack trailing newlines
  */
 private fun generateUnifiedDiff(expected: String, actual: String): String {
-    // Split lines, but remove the trailing empty string that lines() adds when string ends with \n
-    val expectedLines = if (expected.isEmpty()) {
-        emptyList()
-    } else {
-        val lines = expected.lines()
-        // If string ends with newline, lines() adds ONE trailing empty string - remove only that one
-        if (expected.endsWith('\n') && lines.isNotEmpty() && lines.last() == "") {
-            lines.dropLast(1)
-        } else {
-            lines
-        }
-    }
-
-    val actualLines = if (actual.isEmpty()) {
-        emptyList()
-    } else {
-        val lines = actual.lines()
-        // If string ends with newline, lines() adds ONE trailing empty string - remove only that one
-        if (actual.endsWith('\n') && lines.isNotEmpty() && lines.last() == "") {
-            lines.dropLast(1)
-        } else {
-            lines
-        }
-    }
+    val expectedLines = expected.splitLinesForDiff()
+    val actualLines = actual.splitLinesForDiff()
 
     val expectedEndsWithNewline = expected.isEmpty() || expected.endsWith('\n')
     val actualEndsWithNewline = actual.isEmpty() || actual.endsWith('\n')
@@ -319,48 +326,48 @@ private fun generateHunk(
     return buildString {
         append("@@ -$oldRange +$newRange @@\n")
 
-        // Track if we need to add markers after delete/insert sections
+        // Track state for "No newline at end of file" markers
         var lastOpWasDelete = false
         var lastDeletedLineIsFileEnd = false
-        var needsMarkerAfterDeletes = false
+        var pendingInsertMarker = false
 
         for (op in ops) {
             when (op) {
                 is DiffOperation.Equal -> {
-                    // If we were in a delete section and it needs a marker, add it
-                    if (lastOpWasDelete && needsMarkerAfterDeletes) {
+                    // Output any pending insert marker before the equal line
+                    if (pendingInsertMarker) {
                         append("\\ No newline at end of file\n")
-                        needsMarkerAfterDeletes = false
+                        pendingInsertMarker = false
                     }
                     lastOpWasDelete = false
                     append(" ${expected[op.oldIndex]}\n")
                 }
                 is DiffOperation.Delete -> {
-                    // If transitioning from inserts to deletes, check if we need marker
-                    if (!lastOpWasDelete && needsMarkerAfterDeletes) {
+                    // Output any pending insert marker before transitioning to delete
+                    if (pendingInsertMarker) {
                         append("\\ No newline at end of file\n")
-                        needsMarkerAfterDeletes = false
+                        pendingInsertMarker = false
                     }
                     lastOpWasDelete = true
                     lastDeletedLineIsFileEnd = (op.oldIndex == expected.size - 1)
                     append("-${expected[op.oldIndex]}\n")
                 }
                 is DiffOperation.Insert -> {
-                    // Check if previous deletes need marker
+                    // Output delete marker if transitioning from delete to insert
                     if (lastOpWasDelete && lastDeletedLineIsFileEnd && !expectedEndsWithNewline) {
                         append("\\ No newline at end of file\n")
                     }
                     lastOpWasDelete = false
                     append("+${actual[op.newIndex]}\n")
-                    // Check if this insert is at the end of actual and needs marker
+                    // Track if this insert needs a marker (will output later if needed)
                     if (op.newIndex == actual.size - 1 && !actualEndsWithNewline) {
-                        needsMarkerAfterDeletes = true
+                        pendingInsertMarker = true
                     }
                 }
             }
         }
 
-        // Handle marker at the end if the hunk ends with deletes or inserts
+        // Output any remaining markers at the end of the hunk
         if (ops.isNotEmpty()) {
             when (val lastOp = ops.last()) {
                 is DiffOperation.Delete -> {
