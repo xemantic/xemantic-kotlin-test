@@ -301,6 +301,136 @@ class FooTest {
 }
 ```
 
+## Test failure reporting designed for AI agents
+
+An AI-friendly test failure reporting can be configured with the [xemantic-conventions](https://github.com/xemantic/xemantic-conventions) gradle plugin, designed to work together with this library. AI-first asserts, together with XML-wrapped failure reporting, allow an autonomous AI agent to perform Test Driven Development (TDD) in a feedback loop, retaining maximal context while avoidng context rot with minimal noise.
+
+The [ProjectDocumentationTest](src/commonTest/kotlin/ProjectDocumentationTest.kt):
+
+```kotlin
+package com.xemantic.kotlin.test
+
+import kotlin.test.Test
+
+class ProjectDocumentationTest {
+
+    @Test
+    fun `foo equals bar`() {
+        assert("foo" == "bar")
+    }
+
+    @Test
+    fun `foo sameAs bar`() {
+        "foo" sameAs "bar"
+    }
+
+}
+```
+
+when run, will produce:
+
+```
+> Task :jvmTest FAILED
+<test-failure test="com.xemantic.kotlin.test.ProjectDocumentationTest.foo sameAs bar()" platform="jvm">
+<message>
+--- expected
++++ actual
+@@ -1,1 +1,1 @@
+-bar
+\ No newline at end of file
++foo
+\ No newline at end of file
+</message>
+<stacktrace>
+  at app//org.junit.jupiter.api.AssertionUtils.fail(AssertionUtils.java:38)
+  at app//org.junit.jupiter.api.Assertions.fail(Assertions.java:138)
+  at app//kotlin.test.junit5.JUnit5Asserter.fail(JUnitSupport.kt:56)
+  at app//kotlin.test.AssertionsKt__AssertionsKt.fail(Assertions.kt:562)
+  at app//kotlin.test.AssertionsKt.fail(Unknown Source)
+  at app//com.xemantic.kotlin.test.SameAsKt.sameAs(SameAs.kt:37)
+  at app//com.xemantic.kotlin.test.ProjectDocumentationTest.foo sameAs bar(ProjectDocumentationTest.kt:30)
+  at java.base@24.0.2/java.lang.reflect.Method.invoke(Method.java:565)
+  at java.base@24.0.2/java.util.ArrayList.forEach(ArrayList.java:1604)
+  at java.base@24.0.2/java.util.ArrayList.forEach(ArrayList.java:1604)
+</stacktrace>
+</test-failure>
+ProjectDocumentationTest[jvm] > foo sameAs bar()[jvm] FAILED
+<test-failure test="com.xemantic.kotlin.test.ProjectDocumentationTest.foo equals bar()" platform="jvm">
+<message>
+assert("foo" == "bar")
+             |
+             false
+</message>
+<stacktrace>
+  at app//org.junit.jupiter.api.AssertionUtils.fail(AssertionUtils.java:38)
+  at app//org.junit.jupiter.api.Assertions.fail(Assertions.java:138)
+  at app//kotlin.test.junit5.JUnit5Asserter.fail(JUnitSupport.kt:56)
+  at app//kotlin.test.Asserter.assertTrue(Assertions.kt:694)
+  at app//kotlin.test.junit5.JUnit5Asserter.assertTrue(JUnitSupport.kt:30)
+  at app//kotlin.test.Asserter.assertTrue(Assertions.kt:704)
+  at app//kotlin.test.junit5.JUnit5Asserter.assertTrue(JUnitSupport.kt:30)
+  at app//com.xemantic.kotlin.test.AssertionsKt.assert(Assertions.kt:32)
+  at app//com.xemantic.kotlin.test.ProjectDocumentationTest.foo equals bar(ProjectDocumentationTest.kt:25)
+  at java.base@24.0.2/java.lang.reflect.Method.invoke(Method.java:565)
+  at java.base@24.0.2/java.util.ArrayList.forEach(ArrayList.java:1604)
+  at java.base@24.0.2/java.util.ArrayList.forEach(ArrayList.java:1604)
+</stacktrace>
+</test-failure>
+ProjectDocumentationTest[jvm] > foo equals bar()[jvm] FAILED
+```
+
+For the `wasmJs` platform it will produce:
+
+```
+com.xemantic.kotlin.test.ProjectDocumentationTest.foo equals bar[wasmJs, node] FAILED
+com.xemantic.kotlin.test.ProjectDocumentationTest.foo sameAs bar[wasmJs, node] FAILED
+> Task :wasmJsNodeTest FAILED
+<test-failure test="com.xemantic.kotlin.test.ProjectDocumentationTest.foo equals bar" platform="wasmJsNode">
+<message>
+
+assert("foo" == "bar")
+             |
+             false
+</message>
+<stacktrace>
+  at kotlin.createJsError(file:///Users/morisil/git/xemantic/xemantic-kotlin-test/build/wasm/packages/xemantic-kotlin-test-test/kotlin/xemantic-kotlin-test-test.uninstantiated.mjs:19)
+  at com.xemantic.kotlin:xemantic-kotlin-test_test.kotlin.createJsError__externalAdapter(wasm://wasm/com.xemantic.kotlin:xemantic-kotlin-test_test-006452c2)
+  at com.xemantic.kotlin:xemantic-kotlin-test_test.kotlin.Throwable.<init>(wasm://wasm/com.xemantic.kotlin:xemantic-kotlin-test_test-006452c2)
+  at com.xemantic.kotlin:xemantic-kotlin-test_test.kotlin.Error.<init>(wasm://wasm/com.xemantic.kotlin:xemantic-kotlin-test_test-006452c2)
+  at com.xemantic.kotlin:xemantic-kotlin-test_test.kotlin.AssertionError.<init>(wasm://wasm/com.xemantic.kotlin:xemantic-kotlin-test_test-006452c2)
+  at com.xemantic.kotlin:xemantic-kotlin-test_test.kotlin.test.DefaultWasmAsserter.assertTrue(wasm://wasm/com.xemantic.kotlin:xemantic-kotlin-test_test-006452c2)
+  at com.xemantic.kotlin:xemantic-kotlin-test_test.kotlin.test.DefaultWasmAsserter.assertTrue(wasm://wasm/com.xemantic.kotlin:xemantic-kotlin-test_test-006452c2)
+  at com.xemantic.kotlin:xemantic-kotlin-test_test.com.xemantic.kotlin.test.assert(wasm://wasm/com.xemantic.kotlin:xemantic-kotlin-test_test-006452c2)
+  at com.xemantic.kotlin:xemantic-kotlin-test_test.com.xemantic.kotlin.test.ProjectDocumentationTest.foo equals bar(wasm://wasm/com.xemantic.kotlin:xemantic-kotlin-test_test-006452c2)
+  at ref.invoke(wasm://wasm/com.xemantic.kotlin:xemantic-kotlin-test_test-006452c2)
+</stacktrace>
+</test-failure>
+<test-failure test="com.xemantic.kotlin.test.ProjectDocumentationTest.foo sameAs bar" platform="wasmJsNode">
+<message>
+--- expected
++++ actual
+@@ -1,1 +1,1 @@
+-bar
+\ No newline at end of file
++foo
+\ No newline at end of file
+</message>
+<stacktrace>
+  at kotlin.createJsError(file:///Users/morisil/git/xemantic/xemantic-kotlin-test/build/wasm/packages/xemantic-kotlin-test-test/kotlin/xemantic-kotlin-test-test.uninstantiated.mjs:19)
+  at com.xemantic.kotlin:xemantic-kotlin-test_test.kotlin.createJsError__externalAdapter(wasm://wasm/com.xemantic.kotlin:xemantic-kotlin-test_test-006452c2)
+  at com.xemantic.kotlin:xemantic-kotlin-test_test.kotlin.Throwable.<init>(wasm://wasm/com.xemantic.kotlin:xemantic-kotlin-test_test-006452c2)
+  at com.xemantic.kotlin:xemantic-kotlin-test_test.kotlin.Error.<init>(wasm://wasm/com.xemantic.kotlin:xemantic-kotlin-test_test-006452c2)
+  at com.xemantic.kotlin:xemantic-kotlin-test_test.kotlin.AssertionError.<init>(wasm://wasm/com.xemantic.kotlin:xemantic-kotlin-test_test-006452c2)
+  at com.xemantic.kotlin:xemantic-kotlin-test_test.kotlin.test.DefaultWasmAsserter.fail(wasm://wasm/com.xemantic.kotlin:xemantic-kotlin-test_test-006452c2)
+  at com.xemantic.kotlin:xemantic-kotlin-test_test.kotlin.test.DefaultWasmAsserter.fail(wasm://wasm/com.xemantic.kotlin:xemantic-kotlin-test_test-006452c2)
+  at com.xemantic.kotlin:xemantic-kotlin-test_test.kotlin.test.fail(wasm://wasm/com.xemantic.kotlin:xemantic-kotlin-test_test-006452c2)
+  at com.xemantic.kotlin:xemantic-kotlin-test_test.com.xemantic.kotlin.test.sameAs(wasm://wasm/com.xemantic.kotlin:xemantic-kotlin-test_test-006452c2)
+  at com.xemantic.kotlin:xemantic-kotlin-test_test.com.xemantic.kotlin.test.ProjectDocumentationTest.foo sameAs bar(wasm://wasm/com.xemantic.kotlin:xemantic-kotlin-test_test-006452c2)
+</stacktrace>
+</test-failure>
+2 tests completed, 2 failed
+```
+
 ## Development
 
 Clone this project, and then run:
