@@ -36,6 +36,7 @@ public fun assert(actual: Boolean, message: String? = null) {
 public infix fun <T> T?.should(block: T.() -> Unit) {
     contract {
         callsInPlace(block, InvocationKind.EXACTLY_ONCE)
+        returns() implies (this@should != null)
     }
     assertNotNull(this)
     block()
