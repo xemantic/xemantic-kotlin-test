@@ -225,4 +225,22 @@ class AssertionsTest {
         )
     }
 
+    @Test
+    fun `should smart cast nullable value to non-null after should block`() {
+        @Suppress("RedundantNullableReturnType") // we need it for test
+        val nullableMessage: Message? = message
+
+        nullableMessage should {
+            have(id == 42)
+        }
+
+        // This should compile without null check due to the contract
+        // If the contract doesn't work, this line would require nullableMessage?.id or !!
+        val messageId = nullableMessage.id
+        assertEquals(42, messageId)
+
+        // Also test that we can access properties directly
+        assertEquals(2, nullableMessage.content.size)
+    }
+
 }
