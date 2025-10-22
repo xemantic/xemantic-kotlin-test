@@ -47,7 +47,7 @@ private fun String.splitLinesForDiff(): List<String> {
     if (isEmpty()) return emptyList()
     val lines = lines()
     // If string ends with newline, lines() adds ONE trailing empty string - remove only that one
-    return if (endsWith('\n') && lines.size > 1 && lines.last().isEmpty()) {
+    return if (lines.size > 1 && endsWith('\n') && lines.last().isEmpty()) {
         lines.dropLast(1)
     } else {
         lines
@@ -277,8 +277,13 @@ private fun hasNewlineMismatch(
     actualSize: Int,
     expectedEndsWithNewline: Boolean,
     actualEndsWithNewline: Boolean
-) = (x == expectedSize - 1 && !expectedEndsWithNewline && y != actualSize - 1) ||
-    (y == actualSize - 1 && !actualEndsWithNewline && x != expectedSize - 1)
+): Boolean {
+    val isExpectedLastLine = x == expectedSize - 1
+    val isActualLastLine = y == actualSize - 1
+
+    return (isExpectedLastLine && !expectedEndsWithNewline && !isActualLastLine) ||
+           (isActualLastLine && !actualEndsWithNewline && !isExpectedLastLine)
+}
 
 /**
  * Computes the diff between two lists of lines using Myers' diff algorithm.
@@ -539,11 +544,12 @@ private fun generateHunks(
  * Formats a hunk range according to unified diff convention.
  * Returns "0,0" for empty, just the line number for single lines, or "start,count" for multiple lines.
  */
-private fun formatHunkRange(startLine: Int, count: Int): String = when {
-    count == 0 -> "0,0"
-    count == 1 && startLine > 0 -> "$startLine"
-    else -> "$startLine,$count"
-}
+private fun formatHunkRange(startLine: Int, count: Int): String =
+    when (count) {
+        0 -> "0,0"
+        1 -> if (startLine > 0) "$startLine" else "$startLine,$count"
+        else -> "$startLine,$count"
+    }
 
 /**
  * Generates a single hunk string from a range of operations.
