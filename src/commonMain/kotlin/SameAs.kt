@@ -47,7 +47,7 @@ private fun String.splitLinesForDiff(): List<String> {
     if (isEmpty()) return emptyList()
     val lines = lines()
     // If string ends with newline, lines() adds ONE trailing empty string - remove only that one
-    return if (endsWith('\n') && lines.isNotEmpty() && lines.last() == "") {
+    return if (endsWith('\n') && lines.size > 1 && lines.last().isEmpty()) {
         lines.dropLast(1)
     } else {
         lines
@@ -124,8 +124,14 @@ private fun truncateIfNeeded(
         var newLineCount = 0
 
         for (line in lines) {
-            // Check if this is a changed line
-            val isChangedLine = (line.startsWith("+") || line.startsWith("-")) && !line.startsWith("\\ ")
+            if (line.isEmpty()) {
+                truncatedLines.add(line)
+                continue
+            }
+
+            val firstChar = line[0]
+            // Check if this is a changed line (starts with + or - but not \)
+            val isChangedLine = (firstChar == '+' || firstChar == '-') && !line.startsWith("\\ ")
 
             // Stop if we've already collected enough changed lines
             if (isChangedLine && changedLinesSoFar >= maxChangedLines) {
@@ -136,13 +142,13 @@ private fun truncateIfNeeded(
             truncatedLines.add(line)
 
             // Count lines for hunk header recalculation
-            if (line.startsWith("-") && !line.startsWith("\\ ")) {
-                oldLineCount++
-            } else if (line.startsWith("+") && !line.startsWith("\\ ")) {
-                newLineCount++
-            } else if (line.startsWith(" ")) {
-                oldLineCount++
-                newLineCount++
+            when {
+                firstChar == '-' && !line.startsWith("\\ ") -> oldLineCount++
+                firstChar == '+' && !line.startsWith("\\ ") -> newLineCount++
+                firstChar == ' ' -> {
+                    oldLineCount++
+                    newLineCount++
+                }
             }
 
             if (isChangedLine) {
@@ -194,25 +200,26 @@ private fun recalculateHunkHeader(lines: List<String>, oldLineCount: Int, newLin
     }
 
     // Extract the starting line numbers from the original header
-    val match = HUNK_HEADER_REGEX.find(firstLine)
+    val match = HUNK_HEADER_REGEX.find(firstLine) ?: return lines.joinToString("\n")
 
-    if (match != null) {
-        val oldStart = match.groupValues[1].toInt()
-        val newStart = match.groupValues[2].toInt()
+    val oldStart = match.groupValues[1].toInt()
+    val newStart = match.groupValues[2].toInt()
 
-        // Format the new header
-        val oldRange = formatHunkRange(oldStart, oldLineCount)
-        val newRange = formatHunkRange(newStart, newLineCount)
-        val newHeader = "@@ -$oldRange +$newRange @@"
+    // Format the new header
+    val oldRange = formatHunkRange(oldStart, oldLineCount)
+    val newRange = formatHunkRange(newStart, newLineCount)
 
-        return buildString {
-            append(newHeader)
-            append("\n")
-            append(lines.drop(1).joinToString("\n"))
+    return buildString {
+        append("@@ -")
+        append(oldRange)
+        append(" +")
+        append(newRange)
+        append(" @@")
+        for (i in 1 until lines.size) {
+            append('\n')
+            append(lines[i])
         }
     }
-
-    return lines.joinToString("\n")
 }
 
 /**
@@ -270,17 +277,8 @@ private fun hasNewlineMismatch(
     actualSize: Int,
     expectedEndsWithNewline: Boolean,
     actualEndsWithNewline: Boolean
-): Boolean {
-    val isLastExpected = (x == expectedSize - 1)
-    val isLastActual = (y == actualSize - 1)
-
-    // If one is last line and the other isn't, they have different implicit newline status
-    if (isLastExpected != isLastActual) {
-        return (isLastExpected && !expectedEndsWithNewline) || (isLastActual && !actualEndsWithNewline)
-    }
-
-    return false
-}
+) = (x == expectedSize - 1 && !expectedEndsWithNewline && y != actualSize - 1) ||
+    (y == actualSize - 1 && !actualEndsWithNewline && x != expectedSize - 1)
 
 /**
  * Computes the diff between two lists of lines using Myers' diff algorithm.
