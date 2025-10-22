@@ -1918,7 +1918,7 @@ class SameAsTest {
         }
 
         // then
-        // Should show deletion then first 99 insertions (100 changes total), then truncate
+        // Runs full Myers algorithm (edit distance 201 < 500), then truncates output at 100 changed lines
         error.message sameAs """
             --- expected
             +++ actual
@@ -2029,6 +2029,140 @@ class SameAsTest {
 
             Expected: 1 lines
             Actual: 200 lines
+
+            The differences are too extensive to show in unified diff format.
+            Consider comparing smaller sections or reviewing the strings directly.
+
+        """.trimIndent()
+    }
+
+    @Test
+    fun `should handle extremely large string comparison without running out of memory`() {
+        // given
+        // This test verifies that comparing very large strings doesn't cause OOM
+        // Early termination at d=500 prevents the Myers algorithm from exhausting memory
+        val expected = "small expected string"
+        // Create a very large actual string with 10,000 completely different lines
+        val actual = (1..10_000).joinToString("\n") { "line$it" }
+
+        // when
+        val error = assertFailsWith<AssertionError> {
+            actual sameAs expected
+        }
+
+        // then
+        // With early termination at d=500, the diff computes limited operations
+        // Then truncateIfNeeded limits output to first 100 changed lines
+        error.message sameAs """
+            --- expected
+            +++ actual
+            @@ -1 +1,99 @@
+            -small expected string
+            \ No newline at end of file
+            +line1
+            +line2
+            +line3
+            +line4
+            +line5
+            +line6
+            +line7
+            +line8
+            +line9
+            +line10
+            +line11
+            +line12
+            +line13
+            +line14
+            +line15
+            +line16
+            +line17
+            +line18
+            +line19
+            +line20
+            +line21
+            +line22
+            +line23
+            +line24
+            +line25
+            +line26
+            +line27
+            +line28
+            +line29
+            +line30
+            +line31
+            +line32
+            +line33
+            +line34
+            +line35
+            +line36
+            +line37
+            +line38
+            +line39
+            +line40
+            +line41
+            +line42
+            +line43
+            +line44
+            +line45
+            +line46
+            +line47
+            +line48
+            +line49
+            +line50
+            +line51
+            +line52
+            +line53
+            +line54
+            +line55
+            +line56
+            +line57
+            +line58
+            +line59
+            +line60
+            +line61
+            +line62
+            +line63
+            +line64
+            +line65
+            +line66
+            +line67
+            +line68
+            +line69
+            +line70
+            +line71
+            +line72
+            +line73
+            +line74
+            +line75
+            +line76
+            +line77
+            +line78
+            +line79
+            +line80
+            +line81
+            +line82
+            +line83
+            +line84
+            +line85
+            +line86
+            +line87
+            +line88
+            +line89
+            +line90
+            +line91
+            +line92
+            +line93
+            +line94
+            +line95
+            +line96
+            +line97
+            +line98
+            +line99
+
+            Diff truncated: more than 100 lines changed
+
+            Expected: 1 lines
+            Actual: 10000 lines
 
             The differences are too extensive to show in unified diff format.
             Consider comparing smaller sections or reviewing the strings directly.

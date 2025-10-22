@@ -244,12 +244,22 @@ private sealed class DiffOperation {
  * Newline differences at end-of-file are handled separately during hunk generation, not here.
  * However, when both sequences end at the same line position but have different newline status,
  * we need to ensure that difference is captured in the edit script.
+ *
+ * To prevent memory exhaustion with very large diffs, this function will stop early if the
+ * edit distance (d) exceeds maxChanges. When truncated, it returns a partial diff representing
+ * the changes found up to that point.
+ *
+ * @param maxChanges maximum edit distance (number of insertions + deletions) to process before stopping.
+ *                   This is specifically to prevent OOM with extremely large diffs. Set to a higher value
+ *                   than the display truncation limit (100 changed lines) to allow normal truncation to work.
+ * @return list of diff operations, which may be a partial diff if truncated
  */
 private fun computeDiff(
     expected: List<String>,
     actual: List<String>,
     expectedEndsWithNewline: Boolean,
-    actualEndsWithNewline: Boolean
+    actualEndsWithNewline: Boolean,
+    maxChanges: Int = 500
 ): List<DiffOperation> {
     val n = expected.size
     val m = actual.size
@@ -259,6 +269,24 @@ private fun computeDiff(
     val trace = mutableListOf<IntArray>()
 
     for (d in 0..max) {
+        // Early termination: stop if edit distance exceeds threshold
+        // This prevents memory exhaustion when comparing very large, different strings
+        if (d > maxChanges) {
+            // When we hit the limit, we can't properly backtrack because the trace is incomplete.
+            // Instead, generate a simple diff showing first maxChanges/2 deletions and first maxChanges/2 insertions
+            val ops = mutableListOf<DiffOperation>()
+            val maxDels = minOf(expected.size, maxChanges / 2)
+            val maxIns = minOf(actual.size, maxChanges - maxDels)
+
+            for (i in 0 until maxDels) {
+                ops.add(DiffOperation.Delete(i))
+            }
+            for (i in 0 until maxIns) {
+                ops.add(DiffOperation.Insert(i))
+            }
+            return ops
+        }
+
         for (k in -d..d step 2) {
             // Determine whether to move down (insert) or right (delete)
             var x = if (k == -d || (k != d && v[max + k - 1] < v[max + k + 1])) {
@@ -308,6 +336,8 @@ private fun computeDiff(
  *
  * Walks backwards through the trace to reconstruct the sequence of operations
  * (equal, delete, insert) that transforms expected into actual.
+ *
+ * @param maxOps maximum number of non-Equal operations to include before truncating
  */
 private fun backtrack(
     trace: List<IntArray>,
@@ -315,8 +345,14 @@ private fun backtrack(
     actual: List<String>,
     max: Int,
     expectedEndsWithNewline: Boolean,
-    actualEndsWithNewline: Boolean
+    actualEndsWithNewline: Boolean,
+    maxOps: Int = Int.MAX_VALUE
 ): List<DiffOperation> {
+    // Early return if trace is empty (shouldn't happen normally)
+    if (trace.isEmpty()) {
+        return emptyList()
+    }
+
     var x = expected.size
     var y = actual.size
     val ops = mutableListOf<DiffOperation>()
@@ -369,6 +405,24 @@ private fun backtrack(
                 ops.add(DiffOperation.Insert(lastEqual.newIndex))
             }
         }
+    }
+
+    // Truncate to maxOps if needed - keep only first maxOps non-Equal operations
+    if (maxOps < Int.MAX_VALUE) {
+        var changeCount = 0
+        val truncatedOps = mutableListOf<DiffOperation>()
+
+        for (op in ops) {
+            if (op !is DiffOperation.Equal) {
+                if (changeCount >= maxOps) {
+                    break
+                }
+                changeCount++
+            }
+            truncatedOps.add(op)
+        }
+
+        return truncatedOps
     }
 
     return ops
