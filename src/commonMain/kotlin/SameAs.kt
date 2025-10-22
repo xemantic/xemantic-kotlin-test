@@ -82,10 +82,150 @@ private fun generateUnifiedDiff(expected: String, actual: String): String {
     return buildString {
         append("--- expected\n")
         append("+++ actual\n")
-        for (hunk in hunks) {
+
+        // Truncate if there are too many changes for LLM consumption
+        val truncated = truncateIfNeeded(hunks, expectedLines.size, actualLines.size)
+        for (hunk in truncated) {
             append(hunk)
         }
     }
+}
+
+/**
+ * Truncates hunks if the total number of changed lines exceeds a threshold.
+ *
+ * This prevents overwhelming LLMs with diffs containing hundreds or thousands of changes.
+ * When truncated, returns only the first hunks containing up to maxChangedLines changed lines,
+ * followed by a summary message.
+ *
+ * @param hunks the list of hunk strings to potentially truncate
+ * @param expectedLineCount the total number of lines in the expected string
+ * @param actualLineCount the total number of lines in the actual string
+ * @param maxChangedLines the maximum number of changed lines (+ and - prefixed) to show before truncating
+ * @return the original hunks if under threshold, or truncated hunks with summary message
+ */
+private fun truncateIfNeeded(
+    hunks: List<String>,
+    expectedLineCount: Int,
+    actualLineCount: Int,
+    maxChangedLines: Int = 100
+): List<String> {
+    // Count total changed lines (lines starting with + or -, excluding backslash lines)
+    var totalChangedLines = 0
+    for (hunk in hunks) {
+        for (line in hunk.lines()) {
+            if ((line.startsWith("+") || line.startsWith("-")) && !line.startsWith("\\ ")) {
+                totalChangedLines++
+            }
+        }
+    }
+
+    // If under threshold, return original hunks
+    if (totalChangedLines <= maxChangedLines) {
+        return hunks
+    }
+
+    // Truncate: collect hunks and lines until we hit the limit
+    val result = mutableListOf<String>()
+    var changedLinesSoFar = 0
+
+    for (hunk in hunks) {
+        val lines = hunk.lines()
+        val truncatedLines = mutableListOf<String>()
+        var oldLineCount = 0
+        var newLineCount = 0
+
+        for (line in lines) {
+            // Check if this is a changed line
+            val isChangedLine = (line.startsWith("+") || line.startsWith("-")) && !line.startsWith("\\ ")
+
+            // Stop if we've already collected enough changed lines
+            if (isChangedLine && changedLinesSoFar >= maxChangedLines) {
+                break
+            }
+
+            truncatedLines.add(line)
+
+            // Count lines for hunk header recalculation
+            if (line.startsWith("-") && !line.startsWith("\\ ")) {
+                oldLineCount++
+            } else if (line.startsWith("+") && !line.startsWith("\\ ")) {
+                newLineCount++
+            } else if (line.startsWith(" ")) {
+                oldLineCount++
+                newLineCount++
+            }
+
+            if (isChangedLine) {
+                changedLinesSoFar++
+            }
+        }
+
+        // Recalculate the hunk header with actual line counts
+        if (truncatedLines.isNotEmpty()) {
+            val adjustedHunk = recalculateHunkHeader(truncatedLines, oldLineCount, newLineCount)
+            result.add(adjustedHunk)
+        }
+
+        // Stop processing hunks if we've reached the limit
+        if (changedLinesSoFar >= maxChangedLines) {
+            break
+        }
+    }
+
+    // Add truncation message with leading blank line
+    val truncationMessage = buildString {
+        append("\n\n")
+        append("Diff truncated: more than $maxChangedLines lines changed\n")
+        append("\n")
+        append("Expected: $expectedLineCount lines\n")
+        append("Actual: $actualLineCount lines\n")
+        append("\n")
+        append("The differences are too extensive to show in unified diff format.\n")
+        append("Consider comparing smaller sections or reviewing the strings directly.\n")
+    }
+    result.add(truncationMessage)
+
+    return result
+}
+
+/**
+ * Recalculates the hunk header to reflect the actual line counts after truncation.
+ *
+ * @param lines the hunk lines including the header
+ * @param oldLineCount the number of lines from the old file in this hunk
+ * @param newLineCount the number of lines from the new file in this hunk
+ * @return the hunk with updated header
+ */
+private fun recalculateHunkHeader(lines: List<String>, oldLineCount: Int, newLineCount: Int): String {
+    if (lines.isEmpty()) return ""
+
+    val firstLine = lines[0]
+    if (!firstLine.startsWith("@@")) {
+        return lines.joinToString("\n")
+    }
+
+    // Extract the starting line numbers from the original header
+    val headerRegex = """@@ -(\d+)(?:,\d+)? \+(\d+)(?:,\d+)? @@""".toRegex()
+    val match = headerRegex.find(firstLine)
+
+    if (match != null) {
+        val oldStart = match.groupValues[1].toInt()
+        val newStart = match.groupValues[2].toInt()
+
+        // Format the new header
+        val oldRange = formatHunkRange(oldStart, oldLineCount)
+        val newRange = formatHunkRange(newStart, newLineCount)
+        val newHeader = "@@ -$oldRange +$newRange @@"
+
+        return buildString {
+            append(newHeader)
+            append("\n")
+            append(lines.drop(1).joinToString("\n"))
+        }
+    }
+
+    return lines.joinToString("\n")
 }
 
 /**
