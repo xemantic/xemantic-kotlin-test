@@ -43,16 +43,14 @@ public infix fun String?.sameAs(expected: String) {
  * The standard [String.lines] function adds a trailing empty string when the string ends with \n.
  * This helper removes that trailing empty string to get the actual line content.
  */
-private fun String.splitLinesForDiff(): List<String> = when {
-    isEmpty() -> emptyList()
-    else -> {
-        val lines = lines()
-        // If string ends with newline, lines() adds ONE trailing empty string - remove only that one
-        if (endsWith('\n') && lines.isNotEmpty() && lines.last() == "") {
-            lines.dropLast(1)
-        } else {
-            lines
-        }
+private fun String.splitLinesForDiff(): List<String> {
+    if (isEmpty()) return emptyList()
+    val lines = lines()
+    // If string ends with newline, lines() adds ONE trailing empty string - remove only that one
+    return if (endsWith('\n') && lines.isNotEmpty() && lines.last() == "") {
+        lines.dropLast(1)
+    } else {
+        lines
     }
 }
 
@@ -98,6 +96,9 @@ private fun generateUnifiedDiff(expected: String, actual: String): String {
  * When truncated, returns only the first hunks containing up to maxChangedLines changed lines,
  * followed by a summary message.
  *
+ * Uses a single-pass algorithm: processes hunks until hitting the limit, tracking whether
+ * truncation occurred. This avoids the overhead of counting all changes upfront.
+ *
  * @param hunks the list of hunk strings to potentially truncate
  * @param expectedLineCount the total number of lines in the expected string
  * @param actualLineCount the total number of lines in the actual string
@@ -108,28 +109,15 @@ private fun truncateIfNeeded(
     hunks: List<String>,
     expectedLineCount: Int,
     actualLineCount: Int,
-    maxChangedLines: Int = 100
+    maxChangedLines: Int = MAX_CHANGED_LINES_DISPLAY
 ): List<String> {
-    // Count total changed lines (lines starting with + or -, excluding backslash lines)
-    var totalChangedLines = 0
-    for (hunk in hunks) {
-        for (line in hunk.lines()) {
-            if ((line.startsWith("+") || line.startsWith("-")) && !line.startsWith("\\ ")) {
-                totalChangedLines++
-            }
-        }
-    }
-
-    // If under threshold, return original hunks
-    if (totalChangedLines <= maxChangedLines) {
-        return hunks
-    }
-
-    // Truncate: collect hunks and lines until we hit the limit
     val result = mutableListOf<String>()
     var changedLinesSoFar = 0
+    var truncated = false
 
     for (hunk in hunks) {
+        if (truncated) break
+
         val lines = hunk.lines()
         val truncatedLines = mutableListOf<String>()
         var oldLineCount = 0
@@ -141,6 +129,7 @@ private fun truncateIfNeeded(
 
             // Stop if we've already collected enough changed lines
             if (isChangedLine && changedLinesSoFar >= maxChangedLines) {
+                truncated = true
                 break
             }
 
@@ -161,30 +150,29 @@ private fun truncateIfNeeded(
             }
         }
 
-        // Recalculate the hunk header with actual line counts
+        // Add hunk to result if we collected any lines
         if (truncatedLines.isNotEmpty()) {
             val adjustedHunk = recalculateHunkHeader(truncatedLines, oldLineCount, newLineCount)
             result.add(adjustedHunk)
         }
-
-        // Stop processing hunks if we've reached the limit
-        if (changedLinesSoFar >= maxChangedLines) {
-            break
-        }
     }
 
-    // Add truncation message with leading blank line
-    val truncationMessage = buildString {
-        append("\n\n")
-        append("Diff truncated: more than $maxChangedLines lines changed\n")
-        append("\n")
-        append("Expected: $expectedLineCount lines\n")
-        append("Actual: $actualLineCount lines\n")
-        append("\n")
-        append("The differences are too extensive to show in unified diff format.\n")
-        append("Consider comparing smaller sections or reviewing the strings directly.\n")
+    // Add truncation message if we stopped early
+    if (truncated) {
+        val truncationMessage = """
+
+
+        Diff truncated: more than $maxChangedLines lines changed
+
+        Expected: $expectedLineCount lines
+        Actual: $actualLineCount lines
+
+        The differences are too extensive to show in unified diff format.
+        Consider comparing smaller sections or reviewing the strings directly.
+
+    """.trimIndent()
+        result.add(truncationMessage)
     }
-    result.add(truncationMessage)
 
     return result
 }
@@ -206,8 +194,7 @@ private fun recalculateHunkHeader(lines: List<String>, oldLineCount: Int, newLin
     }
 
     // Extract the starting line numbers from the original header
-    val headerRegex = """@@ -(\d+)(?:,\d+)? \+(\d+)(?:,\d+)? @@""".toRegex()
-    val match = headerRegex.find(firstLine)
+    val match = HUNK_HEADER_REGEX.find(firstLine)
 
     if (match != null) {
         val oldStart = match.groupValues[1].toInt()
@@ -229,12 +216,70 @@ private fun recalculateHunkHeader(lines: List<String>, oldLineCount: Int, newLin
 }
 
 /**
+ * Maximum number of changed lines (+ and - prefixed) to show in diff output before truncating.
+ * This prevents overwhelming LLMs with diffs containing hundreds or thousands of changes.
+ */
+private const val MAX_CHANGED_LINES_DISPLAY = 100
+
+/**
+ * Maximum edit distance (insertions + deletions) to process in Myers' algorithm before stopping.
+ * This is set higher than display limit to allow normal truncation to work, while preventing
+ * memory exhaustion with extremely large diffs.
+ */
+private const val MAX_DIFF_CHANGES = 500
+
+/**
+ * Number of unchanged lines to show before and after each changed section in diff hunks.
+ * Standard unified diff convention uses 3 lines of context.
+ */
+private const val DIFF_CONTEXT_LINES = 3
+
+/**
+ * Regex for parsing hunk headers in unified diff format.
+ * Cached at top level to avoid recompilation on every call.
+ */
+private val HUNK_HEADER_REGEX = """@@ -(\d+)(?:,\d+)? \+(\d+)(?:,\d+)? @@""".toRegex()
+
+/**
  * Represents a change operation in the diff.
  */
 private sealed class DiffOperation {
     data class Delete(val oldIndex: Int) : DiffOperation()
     data class Insert(val newIndex: Int) : DiffOperation()
     data class Equal(val oldIndex: Int, val newIndex: Int) : DiffOperation()
+}
+
+/**
+ * Checks if matching lines at the given positions would create a newline mismatch.
+ *
+ * Lines are considered to have different newline status if one is the last line without
+ * a trailing newline, while the other is not the last line (implicitly has a newline after).
+ *
+ * @param x position in expected list
+ * @param y position in actual list
+ * @param expectedSize size of expected list
+ * @param actualSize size of actual list
+ * @param expectedEndsWithNewline whether expected string ends with newline
+ * @param actualEndsWithNewline whether actual string ends with newline
+ * @return true if these positions would create a newline mismatch
+ */
+private fun hasNewlineMismatch(
+    x: Int,
+    y: Int,
+    expectedSize: Int,
+    actualSize: Int,
+    expectedEndsWithNewline: Boolean,
+    actualEndsWithNewline: Boolean
+): Boolean {
+    val isLastExpected = (x == expectedSize - 1)
+    val isLastActual = (y == actualSize - 1)
+
+    // If one is last line and the other isn't, they have different implicit newline status
+    if (isLastExpected != isLastActual) {
+        return (isLastExpected && !expectedEndsWithNewline) || (isLastActual && !actualEndsWithNewline)
+    }
+
+    return false
 }
 
 /**
@@ -259,7 +304,7 @@ private fun computeDiff(
     actual: List<String>,
     expectedEndsWithNewline: Boolean,
     actualEndsWithNewline: Boolean,
-    maxChanges: Int = 500
+    maxChanges: Int = MAX_DIFF_CHANGES
 ): List<DiffOperation> {
     val n = expected.size
     val m = actual.size
@@ -299,20 +344,9 @@ private fun computeDiff(
             // Extend diagonally as far as possible while lines match
             // However, don't treat lines as equal if they have different newline status
             while (x < n && y < m && expected[x] == actual[y]) {
-                // Check if matching these lines would create a newline mismatch
-                val isLastExpected = (x == n - 1)
-                val isLastActual = (y == m - 1)
-
-                // If one is last line and the other isn't, they have different implicit newline status
-                if (isLastExpected != isLastActual) {
-                    // Expected is last (no newline after if !expectedEndsWithNewline)
-                    // Actual is not last (has newline after)
-                    // OR vice versa - either way, they're different
-                    if ((isLastExpected && !expectedEndsWithNewline) || (isLastActual && !actualEndsWithNewline)) {
-                        break
-                    }
+                if (hasNewlineMismatch(x, y, n, m, expectedEndsWithNewline, actualEndsWithNewline)) {
+                    break
                 }
-
                 x++
                 y++
             }
@@ -440,7 +474,7 @@ private fun generateHunks(
     actual: List<String>,
     expectedEndsWithNewline: Boolean,
     actualEndsWithNewline: Boolean,
-    context: Int = 3
+    context: Int = DIFF_CONTEXT_LINES
 ): List<String> {
     if (ops.isEmpty()) return emptyList()
 
@@ -559,21 +593,6 @@ private fun generateHunk(
     // Count lines in each side within the range
     var oldCount = 0
     var newCount = 0
-    for (i in startIndex until endIndex) {
-        when (ops[i]) {
-            is DiffOperation.Delete, is DiffOperation.Equal -> oldCount++
-            is DiffOperation.Insert -> newCount++
-        }
-    }
-    // Adjust newCount to include Equal operations
-    for (i in startIndex until endIndex) {
-        if (ops[i] is DiffOperation.Equal) {
-            if (oldCount > 0 && newCount < oldCount) newCount++
-        }
-    }
-    // Recalculate properly
-    oldCount = 0
-    newCount = 0
     for (i in startIndex until endIndex) {
         val op = ops[i]
         if (op is DiffOperation.Delete || op is DiffOperation.Equal) oldCount++
