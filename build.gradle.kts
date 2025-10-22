@@ -1,6 +1,8 @@
 @file:OptIn(ExperimentalWasmDsl::class, ExperimentalKotlinGradlePluginApi::class)
 
+import com.github.benmanes.gradle.versions.updates.DependencyUpdatesTask
 import com.xemantic.gradle.conventions.License
+import org.gradle.kotlin.dsl.withType
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
@@ -277,5 +279,21 @@ jreleaser {
             active = Active.ALWAYS
             status = releaseAnnouncement
         }
+    }
+}
+
+val unstableKeywords = listOf("alpha", "beta", "rc")
+
+fun isNonStable(
+    version: String
+) = version.lowercase().let { normalizedVersion ->
+    unstableKeywords.any {
+        it in normalizedVersion
+    }
+}
+
+tasks.withType<DependencyUpdatesTask> {
+    rejectVersionIf {
+        isNonStable(candidate.version)
     }
 }
