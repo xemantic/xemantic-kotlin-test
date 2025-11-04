@@ -2,13 +2,13 @@
 kotlinTarget = "2.2"
 javaTarget = "1.8"
 
-kotlin = "2.2.20"
+kotlin = "2.2.21"
 kotlinxCoroutines = "1.10.2"
 kotlinxSerialization = "1.9.0"
 
 versionsPlugin = "0.53.0"
 dokkaPlugin = "2.1.0"
-jreleaserPlugin = "1.20.0"
+jreleaserPlugin = "1.21.0"
 binaryCompatibilityValidatorPlugin = "0.18.1"
 xemanticConventionsPlugin = "0.4.3"
 
