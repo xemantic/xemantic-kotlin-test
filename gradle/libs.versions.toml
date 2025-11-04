@@ -4,6 +4,7 @@ javaTarget = "1.8"
 
 kotlin = "2.2.20"
 kotlinxCoroutines = "1.10.2"
+kotlinxSerialization = "1.9.0"
 
 versionsPlugin = "0.53.0"
 dokkaPlugin = "2.1.0"
@@ -14,6 +15,7 @@ xemanticConventionsPlugin = "0.4.3"
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinxCoroutines" }
+kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerialization" }
 
 [plugins]
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }

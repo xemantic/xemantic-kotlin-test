@@ -221,6 +221,55 @@ When the strings differ, `sameAs` produces clear diff output similar to git diff
  line3
 ```
 
+### JSON Comparison with Semantic Formatting
+
+For comparing JSON strings, use the `sameAsJson` function which automatically prettifies the actual JSON before comparison and provides unified diff output when they don't match semantically:
+
+```kotlin
+actualJsonString sameAsJson expectedJsonString
+```
+
+This is particularly useful when comparing JSON outputs from APIs or serializers. The actual JSON will be automatically formatted with 2-space indentation, preserving object key order:
+
+```kotlin
+"""{"foo":"bar","baz":42}""" sameAsJson """
+    {
+      "foo": "bar",
+      "baz": 42
+    }
+""".trimIndent()
+```
+
+When JSON strings differ semantically, you'll see a clear unified diff:
+
+```text
+--- expected
++++ actual
+@@ -1,4 +1,4 @@
+ {
+-  "foo": "bar",
++  "foo": "qux",
+   "baz": 42
+ }
+```
+
+If the expected JSON is malformed, `sameAsJson` throws `IllegalArgumentException` with a detailed error message:
+
+```kotlin
+"""{"valid":"json"}""" sameAsJson """{invalid json}"""
+// throws: IllegalArgumentException: Invalid expected JSON: ...
+```
+
+If the actual JSON is malformed, `sameAsJson` throws `AssertionError` with a detailed error message:
+
+```kotlin
+"""{invalid json}""" sameAsJson """{"valid":"json"}"""
+// throws: AssertionError: Invalid JSON: ...
+```
+
+> [!TIP]
+> `sameAsJson` is ideal for AI agent workflows when testing JSON serialization, API responses, or any JSON-based data structures. The semantic comparison ignores formatting differences while the unified diff output helps agents quickly identify and fix discrepancies.
+
 ### Test Context
 
 You can obtain access to the test context like:
