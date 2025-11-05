@@ -153,6 +153,7 @@ kotlin {
             dependencies {
                 implementation(libs.kotlin.test)
                 implementation(libs.kotlinx.serialization.json)
+                api(libs.jetbrains.annotations)
             }
         }
 

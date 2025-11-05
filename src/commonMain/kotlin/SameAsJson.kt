@@ -19,6 +19,7 @@ package com.xemantic.kotlin.test
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
+import org.intellij.lang.annotations.Language
 import kotlin.test.fail
 
 /**
@@ -40,7 +41,9 @@ import kotlin.test.fail
  * @throws AssertionError if the strings are not equal, with unified diff output.
  * @throws IllegalArgumentException if the expected JSON is malformed.
  */
-public infix fun String?.sameAsJson(expected: String) {
+public infix fun String?.sameAsJson(
+    @Language("json") expected: String
+) {
 
     if (this == null) {
         fail("The string is null, but expected to be: $expected")
