@@ -19,7 +19,7 @@ jobs:
       - name: Setup Java
         uses: actions/setup-java@v5.1.0
         with:
-          distribution: 'temurin'
+          distribution: ${{ vars.DEFAULT_JAVA_DISTRIBUTION }}
           java-version: ${{ vars.DEFAULT_JAVA_VERSION }}
 
       - name: Setup Gradle
