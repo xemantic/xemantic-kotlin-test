@@ -4,34 +4,30 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is **xemantic-kotlin-test**, a Kotlin multiplatform testing library that provides power-assert compatible assertions DSL and testing utilities. The library supports all major Kotlin platforms including JVM, JS, Native (macOS, iOS, Linux, Windows), and WASM.
+This is **xemantic-kotlin-test**, an AX-first (AI/Agent Experience) Kotlin multiplatform testing library with power-assert compatible assertions DSL. Designed to minimize cognitive load for LLMs—meaning concise, semi-natural language flow that produces clear, diff-based error output when assertions fail. Supports JVM, JS, Native (macOS, iOS, Linux, Windows), and WASM.
 
 ## Core Architecture
 
 ### Source Structure
-- `src/commonMain/kotlin/` - Core multiplatform code
-  - `Assertions.kt` - Main assertion functions (`assert`, `should`, `be`, `have`)
-  - `TestContext.kt` - Cross-platform test context utilities
-- `src/commonTest/kotlin/` - Common tests
-- Platform-specific implementations in:
-  - `src/jvmMain/kotlin/`
-  - `src/jsMain/kotlin/`
-  - `src/nativeMain/kotlin/`
-  - `src/wasmJsMain/kotlin/`
-  - `src/wasmWasiMain/kotlin/`
+- `src/commonMain/kotlin/` - Core multiplatform code:
+  - `Assertions.kt` - Power-assert DSL: `assert`, `should`, `be`, `have`
+  - `SameAs.kt` - String comparison with unified diff output (Myers' algorithm)
+  - `SameAsJson.kt` - JSON comparison with automatic prettification
+  - `TestContext.kt` - Cross-platform environment access (`getEnv`, `gradleRootDir`, `isBrowserPlatform`)
+  - `coroutines/SuspendShould.kt` - Suspend version of `should` for coroutine tests
+  - `text/StringFlows.kt` - Flow utilities for testing streaming text
+- Platform-specific `expect` implementations in `src/{jvm,js,native,wasmJs,wasmWasi}Main/kotlin/`
 
-### Key Components
+### Key Assertion Functions
 
-**Assertions Framework**: Built around power-assert plugin with custom DSL:
-- `assert()` - Multiplatform assert function with power-assert support
-- `should {}` - Infix function for chaining assertions on objects
-- `be<T>()` - Type assertion with smart casting
-- `have()` - Condition assertion function
-
-**Test Context**: Cross-platform utilities for:
-- Environment variable access (`getEnv()`)
-- Gradle root directory access (`gradleRootDir`)
-- Platform detection (`isBrowserPlatform`)
+| Function | Purpose |
+|----------|---------|
+| `assert(condition)` | Power-assert enabled boolean assertion |
+| `obj should { ... }` | Scoped assertions on an object with null check |
+| `be<Type>()` | Type assertion with smart cast within `should` block |
+| `have(condition)` | Power-assert enabled condition within `should` block |
+| `actual sameAs expected` | String equality with unified diff on failure |
+| `actual sameAsJson expected` | JSON comparison (prettifies actual, diff on failure) |
 
 ## Commands
 
@@ -49,13 +45,13 @@ This is **xemantic-kotlin-test**, a Kotlin multiplatform testing library that pr
 ./gradlew jvmTest                  # Run JVM tests only
 ./gradlew jsTest                   # Run JS tests (browser + Node.js)
 ./gradlew wasmJsTest               # Run WASM JS tests
-./gradlew wasmWasiTest             # Run WASM WASI tests
-./gradlew macosX64Test             # Run native tests on macOS x64
-./gradlew macosArm64Test           # Run native tests on macOS ARM64
-./gradlew linuxX64Test             # Run native tests on Linux x64
-./gradlew mingwX64Test             # Run native tests on Windows x64
-./gradlew iosSimulatorArm64Test    # Run native tests on iOS Simulator ARM64
-./gradlew iosX64Test               # Run native tests on iOS x64
+./gradlew macosArm64Test           # Run native tests on macOS ARM64 (use macosX64Test for Intel)
+```
+
+### Running a Single Test
+```bash
+./gradlew jvmTest --tests "com.xemantic.kotlin.test.SameAsTest"           # Run specific test class
+./gradlew jvmTest --tests "com.xemantic.kotlin.test.SameAsTest.test name" # Run specific test method
 ```
 
 ### API Compatibility
@@ -83,37 +79,18 @@ This is **xemantic-kotlin-test**, a Kotlin multiplatform testing library that pr
 
 ## Power-Assert Configuration
 
-The project uses Kotlin's power-assert plugin configured for these functions:
-- `com.xemantic.kotlin.test.assert`
-- `com.xemantic.kotlin.test.have`
-
-When working with assertions, ensure power-assert is properly configured in `build.gradle.kts`.
+The power-assert plugin is configured for `com.xemantic.kotlin.test.assert` and `com.xemantic.kotlin.test.have`. When adding new assertion functions that should benefit from power-assert's expression breakdown, add them to the `powerAssert.functions` list in `build.gradle.kts`.
 
 ## Platform-Specific Notes
 
-### Test Configuration
-- **JVM/JS/Native**: Environment variables are configured in `build.gradle.kts`
-- **Browser platforms**: Environment variables passed via webpack config in `webpack.config.d/env-config.js`
-- **Native emulators**: Uses `SIMCTL_CHILD_` prefix for environment variables
-
-### Disabled Tests
-Some platform tests are disabled in the build:
-- `tvosSimulatorArm64Test` and `watchosSimulatorArm64Test` (require Xcode)
-- `wasmWasiNodeTest` (environment variable retrieval not implemented)
-- `wasmJsBrowserTest` (stale test issues)
-
-## Development Workflow
-
-1. Make changes to core assertions in `src/commonMain/kotlin/Assertions.kt`
-2. Add platform-specific implementations if needed
-3. Write tests in `src/commonTest/kotlin/`
-4. Run `./gradlew allTests` to verify all platforms
-5. Run `./gradlew apiCheck` to verify API compatibility
-6. Use `./gradlew build` for full verification before commits
+- **Environment variables**: Configured in `build.gradle.kts` for JVM/JS/Native; browser tests use `webpack.config.d/env-config.js`
+- **Native emulators**: Use `SIMCTL_CHILD_` prefix for environment variables
+- **Disabled tests**: `tvosSimulatorArm64Test`, `watchosSimulatorArm64Test` (require Xcode), `wasmWasiNodeTest` (no env var support), `wasmJsBrowserTest` (stale issues)
 
 ## Key Dependencies
 
-- `kotlin-test` for base testing functionality
-- Power-assert plugin for enhanced assertion messages
-- Binary compatibility validator for API stability
-- Dokka for documentation generation
+- `kotlin-test` - Base testing functionality
+- `kotlinx-serialization-json` - JSON parsing for `sameAsJson`
+- `kotlinx-coroutines-core` - Coroutine support for suspend assertions
+- Power-assert plugin - Enhanced assertion messages with expression breakdown
+- Binary compatibility validator - API stability checks

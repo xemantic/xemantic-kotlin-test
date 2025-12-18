@@ -27,3 +27,8 @@ public final class com/xemantic/kotlin/test/coroutines/SuspendShouldKt {
 	public static final fun should (Ljava/lang/Object;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
+public final class com/xemantic/kotlin/test/text/StringChunkingKt {
+	public static final fun chunkedRandomly (Ljava/lang/CharSequence;II)Lkotlin/sequences/Sequence;
+	public static synthetic fun chunkedRandomly$default (Ljava/lang/CharSequence;IIILjava/lang/Object;)Lkotlin/sequences/Sequence;
+}
+
