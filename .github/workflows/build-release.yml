@@ -63,7 +63,7 @@ jobs:
         run: ./gradlew -Pversion=$VERSION updateVersionsAfterRelease
 
       - name: Commit version updates after release
-        uses: stefanzweifel/git-auto-commit-action@v7.0.0
+        uses: stefanzweifel/git-auto-commit-action@v7.1.0
         with:
           commit_message: Version updated to ${{ env.VERSION }} in README.md, next snapshot in gradle.properties
           file_pattern: 'README.md gradle.properties'
