@@ -8,11 +8,12 @@ kotlinxSerialization = "1.9.0"
 
 versionsPlugin = "0.53.0"
 dokkaPlugin = "2.1.0"
-jreleaserPlugin = "1.20.0"
+jreleaserPlugin = "1.22.0"
 binaryCompatibilityValidatorPlugin = "0.18.1"
 xemanticConventionsPlugin = "0.6.8"
 jetbrainsAnnotations = "26.0.2-1"
 mavenPublishPlugin = "0.35.0"
+asm = "9.9.1"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }

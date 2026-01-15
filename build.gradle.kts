@@ -157,6 +157,14 @@ repositories {
     mavenCentral()
 }
 
+configurations.all {
+    resolutionStrategy.eachDependency {
+        if (requested.group == "org.ow2.asm") {
+            useVersion(libs.versions.asm.get())
+        }
+    }
+}
+
 tasks {
 
     // skip tests which require XCode components to be installed
