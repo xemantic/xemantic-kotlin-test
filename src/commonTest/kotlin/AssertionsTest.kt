@@ -225,6 +225,94 @@ class AssertionsTest {
         )
     }
 
+    // beOrderedBy tests
+
+    data class Item(val id: Int, val name: String)
+
+    @Test
+    fun `should pass when iterable is ordered by selector`() {
+        val items = listOf(
+            Item(1, "first"),
+            Item(2, "second"),
+            Item(3, "third")
+        )
+        items should {
+            beOrderedBy { it.id }
+        }
+    }
+
+    @Test
+    fun `should pass when iterable is ordered by string selector`() {
+        val items = listOf(
+            Item(3, "apple"),
+            Item(1, "banana"),
+            Item(2, "cherry")
+        )
+        items should {
+            beOrderedBy { it.name }
+        }
+    }
+
+    @Test
+    fun `should pass when iterable is empty`() {
+        val items = emptyList<Item>()
+        items should {
+            beOrderedBy { it.id }
+        }
+    }
+
+    @Test
+    fun `should pass when iterable has single element`() {
+        val items = listOf(Item(42, "only"))
+        items should {
+            beOrderedBy { it.id }
+        }
+    }
+
+    @Test
+    fun `should fail when iterable is not ordered by selector`() {
+        // given
+        val items = listOf(
+            Item(3, "third"),
+            Item(1, "first"),
+            Item(2, "second")
+        )
+
+        // when
+        val exception = assertFailsWith<AssertionError> {
+            items should {
+                beOrderedBy { it.id }
+            }
+        }
+
+        // then
+        exception should {
+            have(message == "Iterable is not ordered by the given selector. Expected: [1, 2, 3], Actual: [3, 1, 2]")
+        }
+    }
+
+    @Test
+    fun `should fail when iterable is in reverse order`() {
+        // given
+        val items = listOf(
+            Item(3, "third"),
+            Item(2, "second"),
+            Item(1, "first")
+        )
+
+        // when
+        val exception = assertFailsWith<AssertionError> {
+            items should {
+                beOrderedBy { it.id }
+            }
+        }
+
+        // then
+        exception should {
+            have(message == "Iterable is not ordered by the given selector. Expected: [1, 2, 3], Actual: [3, 2, 1]")
+        }
+    }
+
     @Test
     fun `should smart cast nullable value to non-null after should block`() {
         @Suppress("RedundantNullableReturnType") // we need it for test
