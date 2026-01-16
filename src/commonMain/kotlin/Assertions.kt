@@ -58,3 +58,13 @@ public fun have(
 ) {
     assertTrue(condition, message)
 }
+
+public infix fun <T, R : Comparable<R>> Iterable<T>.beOrderedBy(selector: (T) -> R) {
+    val values = map(selector)
+    val sortedValues = values.sorted()
+    if (values != sortedValues) {
+        asserter.fail(
+            "Iterable is not ordered by the given selector. Expected: $sortedValues, Actual: $values"
+        )
+    }
+}
