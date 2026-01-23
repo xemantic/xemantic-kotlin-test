@@ -1,4 +1,4 @@
-# Builds the release
+# Builds the release and publishes to Maven Central
 name: Build release
 
 on:
@@ -6,95 +6,20 @@ on:
     types: [ published ]
 
 jobs:
-  build_release:
+  extract_version:
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.version.outputs.version }}
-      target_branch: ${{ steps.target_branch.outputs.target_branch }}
     steps:
-      - name: Write release version
+      - name: Extract version from tag
         id: version
-        run: |
-          VERSION=${GITHUB_REF_NAME#v}
-          echo Version: $VERSION
-          echo "VERSION=$VERSION" >> $GITHUB_ENV
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
+        run: echo "version=${GITHUB_REF_NAME#v}" >> $GITHUB_OUTPUT
 
-      - name: Checkout sources
-        uses: actions/checkout@v6.0.1
-
-      - name: Setup Java
-        uses: actions/setup-java@v5.1.0
-        with:
-          distribution: ${{ vars.DEFAULT_JAVA_DISTRIBUTION }}
-          java-version: ${{ vars.DEFAULT_JAVA_VERSION }}
-
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v5.0.0
-
-      - name: Build and Publish release
-        env:
-          ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
-          ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
-          ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.SIGNING_KEY }}
-          ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.SIGNING_PASSWORD }}
-          JRELEASER_DISCORD_WEBHOOK: ${{ secrets.DISCORD_ANNOUCEMENTS_WEBHOOK }}
-          JRELEASER_LINKEDIN_ACCESS_TOKEN: ${{ secrets.LINKEDIN_ACCESS_TOKEN }}
-          JRELEASER_LINKEDIN_OWNER: ${{ secrets.LINKEDIN_OWNER }}
-          JRELEASER_BLUESKY_HOST: ${{ vars.BLUESKY_HOST }}
-          JRELEASER_BLUESKY_HANDLE: ${{ vars.BLUESKY_HANDLE }}
-          JRELEASER_BLUESKY_PASSWORD: ${{ secrets.BLUESKY_PASSWORD }}
-        run: ./gradlew -Pversion=$VERSION build publishToMavenCentral jreleaserAnnounce --no-configuration-cache
-
-      - name: Get target branch for tag
-        id: target_branch
-        run: |
-          git fetch --all
-          TARGET_BRANCH=$(git branch -r --contains $GITHUB_REF | grep -v "HEAD" | head -n 1 | sed 's/origin\///')
-          echo "Target branch for tag: $TARGET_BRANCH"
-          echo "target_branch=$TARGET_BRANCH" >> $GITHUB_OUTPUT
-
-  update_versions:
-    needs: build_release
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      pull-requests: write
-    steps:
-      - name: Checkout target branch
-        uses: actions/checkout@v6.0.1
-        with:
-          ref: ${{ needs.build_release.outputs.target_branch }}
-
-      - name: Setup Java
-        uses: actions/setup-java@v5.1.0
-        with:
-          distribution: ${{ vars.DEFAULT_JAVA_DISTRIBUTION }}
-          java-version: ${{ vars.DEFAULT_JAVA_VERSION }}
-
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v5.0.0
-
-      - name: Update versions after release
-        run: ./gradlew -Pversion=${{ needs.build_release.outputs.version }} updateVersionsAfterRelease
-
-      - name: Create PR for version updates
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          VERSION: ${{ needs.build_release.outputs.version }}
-          TARGET_BRANCH: ${{ needs.build_release.outputs.target_branch }}
-        run: |
-          BRANCH_NAME="post-release-v$VERSION"
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git checkout -b "$BRANCH_NAME"
-          git add README.md gradle.properties
-          git commit -m "Version updated to $VERSION in README.md, next snapshot in gradle.properties"
-          git push origin "$BRANCH_NAME"
-          gh pr create \
-            --title "Post-release version update for v$VERSION" \
-            --body "Automated version update after release v$VERSION.
-
-          - Updates version in README.md
-          - Sets next snapshot version in gradle.properties" \
-            --base "$TARGET_BRANCH"
+  build:
+    needs: extract_version
+    uses: xemantic/.github/.github/workflows/build-gradle.yml@main
+    secrets: inherit
+    with:
+      gradle_args: -Pversion=${{ needs.extract_version.outputs.version }} build publishToMavenCentral jreleaserAnnounce --no-configuration-cache
+      maven_central: true
+      jreleaser: true
