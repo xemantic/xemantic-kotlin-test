@@ -33,6 +33,165 @@ class SameAsTest {
     }
 
     @Test
+    fun `should pass on equal HTML strings using sameAsHtml`() {
+        // given
+        val html = """
+            <html>
+            <body>
+              <h1>Hello World</h1>
+              <p>This is a <strong>test</strong> paragraph.</p>
+              <ul>
+                <li>Item 1</li>
+                <li>Item 2</li>
+              </ul>
+            </body>
+            </html>
+
+        """.trimIndent()
+
+        // then
+        html sameAsHtml html
+    }
+
+    @Test
+    fun `should fail and report difference on different HTML strings using sameAsHtml`() {
+        // given
+        val actual = /* language=html */ """
+            <html>
+            <body>
+              <h1>Hello World</h1>
+              <p>Updated paragraph.</p>
+              <ul>
+                <li>Item 1</li>
+                <li>Item 3</li>
+              </ul>
+            </body>
+            </html>
+
+        """.trimIndent()
+
+        val expected = """
+            <html>
+            <body>
+              <h1>Hello World</h1>
+              <p>Original paragraph.</p>
+              <ul>
+                <li>Item 1</li>
+                <li>Item 2</li>
+              </ul>
+            </body>
+            </html>
+
+        """.trimIndent()
+
+        // when
+        val error = assertFailsWith<AssertionError> {
+            actual sameAsHtml expected
+        }
+
+        // then
+        error.message sameAs """
+            --- expected
+            +++ actual
+            @@ -1,10 +1,10 @@
+             <html>
+             <body>
+               <h1>Hello World</h1>
+            -  <p>Original paragraph.</p>
+            +  <p>Updated paragraph.</p>
+               <ul>
+                 <li>Item 1</li>
+            -    <li>Item 2</li>
+            +    <li>Item 3</li>
+               </ul>
+             </body>
+             </html>
+
+        """.trimIndent()
+    }
+
+    @Test
+    fun `should pass on equal XML strings using sameAsXml`() {
+        // given
+        val xml = """
+            <?xml version="1.0" encoding="UTF-8"?>
+            <project>
+              <name>xemantic-kotlin-test</name>
+              <dependencies>
+                <dependency>
+                  <groupId>org.jetbrains.kotlin</groupId>
+                  <artifactId>kotlin-test</artifactId>
+                </dependency>
+              </dependencies>
+            </project>
+
+        """.trimIndent()
+
+        // then
+        xml sameAsXml xml
+    }
+
+    @Test
+    fun `should fail and report difference on different XML strings using sameAsXml`() {
+        // given
+        val actual = /* language=xml */ """
+            <?xml version="1.0" encoding="UTF-8"?>
+            <project>
+              <name>xemantic-kotlin-test</name>
+              <version>2.0.0</version>
+              <dependencies>
+                <dependency>
+                  <groupId>org.jetbrains.kotlin</groupId>
+                  <artifactId>kotlin-stdlib</artifactId>
+                </dependency>
+              </dependencies>
+            </project>
+
+        """.trimIndent()
+
+        val expected = """
+            <?xml version="1.0" encoding="UTF-8"?>
+            <project>
+              <name>xemantic-kotlin-test</name>
+              <version>1.0.0</version>
+              <dependencies>
+                <dependency>
+                  <groupId>org.jetbrains.kotlin</groupId>
+                  <artifactId>kotlin-test</artifactId>
+                </dependency>
+              </dependencies>
+            </project>
+
+        """.trimIndent()
+
+        // when
+        val error = assertFailsWith<AssertionError> {
+            actual sameAsXml expected
+        }
+
+        // then
+        error.message sameAs """
+            --- expected
+            +++ actual
+            @@ -1,11 +1,11 @@
+             <?xml version="1.0" encoding="UTF-8"?>
+             <project>
+               <name>xemantic-kotlin-test</name>
+            -  <version>1.0.0</version>
+            +  <version>2.0.0</version>
+               <dependencies>
+                 <dependency>
+                   <groupId>org.jetbrains.kotlin</groupId>
+            -      <artifactId>kotlin-test</artifactId>
+            +      <artifactId>kotlin-stdlib</artifactId>
+                 </dependency>
+               </dependencies>
+             </project>
+
+        """.trimIndent()
+    }
+
+    @Test
     fun `should fail and report difference on different single line strings`() {
         // when
         val error = assertFailsWith<AssertionError> {
