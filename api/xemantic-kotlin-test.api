@@ -13,6 +13,8 @@ public final class com/xemantic/kotlin/test/SameAsJsonKt {
 
 public final class com/xemantic/kotlin/test/SameAsKt {
 	public static final fun sameAs (Ljava/lang/String;Ljava/lang/String;)V
+	public static final fun sameAsHtml (Ljava/lang/String;Ljava/lang/String;)V
+	public static final fun sameAsXml (Ljava/lang/String;Ljava/lang/String;)V
 }
 
 public final class com/xemantic/kotlin/test/TestContextKt {
