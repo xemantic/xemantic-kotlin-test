@@ -16,6 +16,7 @@
 
 package com.xemantic.kotlin.test
 
+import org.intellij.lang.annotations.Language
 import kotlin.test.fail
 
 /**
@@ -35,6 +36,34 @@ public infix fun String?.sameAs(expected: String) {
 
     val diff = generateUnifiedDiff(expected, this)
     fail(diff)
+}
+
+/**
+ * Asserts that this string is the same as the [expected] HTML string.
+ * Delegates to [sameAs] while providing IDE language injection for HTML,
+ * enabling syntax highlighting and completion in the [expected] parameter.
+ *
+ * @param expected the expected HTML string.
+ * @throws AssertionError if the strings are not equal, with unified diff output.
+ */
+public infix fun String?.sameAsHtml(
+    @Language("html") expected: String
+) {
+    sameAs(expected)
+}
+
+/**
+ * Asserts that this string is the same as the [expected] XML string.
+ * Delegates to [sameAs] while providing IDE language injection for XML,
+ * enabling syntax highlighting and completion in the [expected] parameter.
+ *
+ * @param expected the expected XML string.
+ * @throws AssertionError if the strings are not equal, with unified diff output.
+ */
+public infix fun String?.sameAsXml(
+    @Language("xml") expected: String
+) {
+    sameAs(expected)
 }
 
 /**

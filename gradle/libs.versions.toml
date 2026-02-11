@@ -1,10 +1,10 @@
 [versions]
-kotlinTarget = "2.2"
+kotlinTarget = "2.3"
 javaTarget = "1.8"
 
-kotlin = "2.2.21"
+kotlin = "2.3.10"
 kotlinxCoroutines = "1.10.2"
-kotlinxSerialization = "1.9.0"
+kotlinxSerialization = "1.10.0"
 
 versionsPlugin = "0.53.0"
 dokkaPlugin = "2.1.0"
@@ -12,7 +12,7 @@ jreleaserPlugin = "1.22.0"
 binaryCompatibilityValidatorPlugin = "0.18.1"
 xemanticConventionsPlugin = "0.6.8"
 jetbrainsAnnotations = "26.0.2-1"
-mavenPublishPlugin = "0.35.0"
+mavenPublishPlugin = "0.36.0"
 asm = "9.9.1"
 
 [libraries]
