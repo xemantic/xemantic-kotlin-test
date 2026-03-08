@@ -18,6 +18,8 @@ package com.xemantic.kotlin.test
 
 import kotlin.test.Test
 import kotlin.test.assertFailsWith
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 /**
  * The [sameAs] reports differences in unified diff format.
@@ -2327,6 +2329,57 @@ class SameAsTest {
             Consider comparing smaller sections or reviewing the strings directly.
 
         """.trimIndent()
+    }
+
+    @Test
+    fun `should pass on identical strings with CRLF line endings`() {
+        val string = "unchanged line\r\nexpected content\r\n"
+        string sameAs string
+    }
+
+    @Test
+    fun `should produce readable diff without raw CR for CRLF strings differing in content`() {
+        val expected = "unchanged line\r\nexpected content\r\n"
+        val actual   = "unchanged line\r\nactual content\r\n"
+        val error = assertFailsWith<AssertionError> {
+            actual sameAs expected
+        }
+        val message = error.message!!
+        assertFalse('\r' in message, "Diff output must not contain raw \\r characters")
+        assertTrue("-expected content" in message, "Should show deleted expected line")
+        assertTrue("+actual content" in message, "Should show inserted actual line")
+    }
+
+    @Test
+    fun `should produce readable diff for minimal CRLF reproduction`() {
+        val expected = "unchanged line\r\nexpected content\r\n"
+        val actual   = "unchanged line\r\nactual content\r\n"
+        val error = assertFailsWith<AssertionError> {
+            actual sameAs expected
+        }
+        assertFalse('\r' in error.message!!, "Diff output must not contain raw \\r characters")
+    }
+
+    @Test
+    fun `should handle mixed CRLF and LF line endings in baseline-like content`() {
+        // Content with mixed line endings: LF for source sections, CRLF for JS output
+        fun makeBaseline(jsLine: String): String = buildString {
+            append("//// [example.ts]\n")
+            append("export const x = 1;\n")
+            append("\n")
+            append("//// [example.js]\r\n")
+            append("$jsLine\r\n")
+        }
+
+        val expected = makeBaseline("export const x = 1;")
+        val actual   = makeBaseline("export const x = 2;")
+        val error = assertFailsWith<AssertionError> {
+            actual sameAs expected
+        }
+        val message = error.message!!
+        assertFalse('\r' in message, "Diff output must not contain raw \\r characters")
+        assertTrue("-export const x = 1;" in message, "Should show the deleted line")
+        assertTrue("+export const x = 2;" in message, "Should show the inserted line")
     }
 
 }
