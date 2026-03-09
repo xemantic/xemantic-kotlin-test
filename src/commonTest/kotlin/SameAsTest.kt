@@ -36,7 +36,7 @@ class SameAsTest {
     fun `should pass on equal HTML strings using sameAsHtml`() {
         // given
         val html = """
-            <html lang='en'>
+            <html lang="en">
             <body>
               <h1>Hello World</h1>
               <p>This is a <strong>test</strong> paragraph.</p>
@@ -57,7 +57,7 @@ class SameAsTest {
     fun `should fail and report difference on different HTML strings using sameAsHtml`() {
         // given
         val actual = /* language=html */ """
-            <html lang='en'>
+            <html lang="en">
             <body>
               <h1>Hello World</h1>
               <p>Updated paragraph.</p>
@@ -71,7 +71,7 @@ class SameAsTest {
         """.trimIndent()
 
         val expected = """
-            <html lang='en'>
+            <html lang="en">
             <body>
               <h1>Hello World</h1>
               <p>Original paragraph.</p>
@@ -94,7 +94,7 @@ class SameAsTest {
             --- expected
             +++ actual
             @@ -1,10 +1,10 @@
-             <html>
+             <html lang="en">
              <body>
                <h1>Hello World</h1>
             -  <p>Original paragraph.</p>
