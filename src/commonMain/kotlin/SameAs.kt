@@ -34,6 +34,19 @@ public infix fun String?.sameAs(expected: String) {
         fail("The string is null, but expected to be: $expected")
     }
 
+    // Detect strings that differ only in line endings (CRLF vs LF).
+    // The diff normalizes \r away, which would produce zero hunks — confusing the developer.
+    if (this.replace("\r", "") == expected.replace("\r", "")) {
+        val expectedCrlf = "\r\n" in expected
+        val actualCrlf = "\r\n" in this
+        val detail = when {
+            expectedCrlf && !actualCrlf -> "expected uses CRLF (\\r\\n), actual uses LF (\\n)"
+            !expectedCrlf && actualCrlf -> "expected uses LF (\\n), actual uses CRLF (\\r\\n)"
+            else -> "strings have mixed line ending differences"
+        }
+        fail("Strings differ only in line endings: $detail")
+    }
+
     val diff = generateUnifiedDiff(expected, this)
     fail(diff)
 }

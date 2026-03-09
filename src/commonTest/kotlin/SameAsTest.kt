@@ -1138,6 +1138,38 @@ class SameAsTest {
     }
 
     @Test
+    fun `should fail with clear message when actual uses CRLF and expected uses LF`() {
+        // given
+        val expected = "line1\nline2\n"
+        val actual = "line1\r\nline2\r\n"
+
+        // when
+        val error = assertFailsWith<AssertionError> {
+            actual sameAs expected
+        }
+
+        // then
+        error.message sameAs
+            "Strings differ only in line endings: expected uses LF (\\n), actual uses CRLF (\\r\\n)"
+    }
+
+    @Test
+    fun `should fail with clear message when expected uses CRLF and actual uses LF`() {
+        // given
+        val expected = "line1\r\nline2\r\n"
+        val actual = "line1\nline2\n"
+
+        // when
+        val error = assertFailsWith<AssertionError> {
+            actual sameAs expected
+        }
+
+        // then
+        error.message sameAs
+            "Strings differ only in line endings: expected uses CRLF (\\r\\n), actual uses LF (\\n)"
+    }
+
+    @Test
     fun `should fail and report difference with control characters`() {
         // given
         val expected = "line1\nline2"
