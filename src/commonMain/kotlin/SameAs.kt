@@ -42,7 +42,8 @@ public infix fun String?.sameAs(expected: String) {
         val detail = when {
             expectedCrlf && !actualCrlf -> "expected uses CRLF (\\r\\n), actual uses LF (\\n)"
             !expectedCrlf && actualCrlf -> "expected uses LF (\\n), actual uses CRLF (\\r\\n)"
-            else -> "strings have mixed line ending differences"
+            !expectedCrlf && !actualCrlf -> "strings contain standalone carriage return (\\r) characters"
+            else -> "strings have mixed CRLF (\\r\\n) and LF (\\n) line endings"
         }
         fail("Strings differ only in line endings: $detail")
     }

@@ -1170,6 +1170,38 @@ class SameAsTest {
     }
 
     @Test
+    fun `should fail with clear message when strings contain standalone carriage returns`() {
+        // given
+        val expected = "ab"
+        val actual = "a\rb"
+
+        // when
+        val error = assertFailsWith<AssertionError> {
+            actual sameAs expected
+        }
+
+        // then
+        error.message sameAs
+            "Strings differ only in line endings: strings contain standalone carriage return (\\r) characters"
+    }
+
+    @Test
+    fun `should fail with clear message when strings have mixed CRLF and LF line endings`() {
+        // given
+        val expected = "line1\r\nline2\nline3\n"
+        val actual = "line1\nline2\r\nline3\n"
+
+        // when
+        val error = assertFailsWith<AssertionError> {
+            actual sameAs expected
+        }
+
+        // then
+        error.message sameAs
+            "Strings differ only in line endings: strings have mixed CRLF (\\r\\n) and LF (\\n) line endings"
+    }
+
+    @Test
     fun `should fail and report difference with control characters`() {
         // given
         val expected = "line1\nline2"
