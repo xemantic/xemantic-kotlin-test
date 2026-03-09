@@ -36,7 +36,7 @@ class SameAsTest {
     fun `should pass on equal HTML strings using sameAsHtml`() {
         // given
         val html = """
-            <html>
+            <html lang="en">
             <body>
               <h1>Hello World</h1>
               <p>This is a <strong>test</strong> paragraph.</p>
@@ -57,7 +57,7 @@ class SameAsTest {
     fun `should fail and report difference on different HTML strings using sameAsHtml`() {
         // given
         val actual = /* language=html */ """
-            <html>
+            <html lang="en">
             <body>
               <h1>Hello World</h1>
               <p>Updated paragraph.</p>
@@ -71,7 +71,7 @@ class SameAsTest {
         """.trimIndent()
 
         val expected = """
-            <html>
+            <html lang="en">
             <body>
               <h1>Hello World</h1>
               <p>Original paragraph.</p>
@@ -94,7 +94,7 @@ class SameAsTest {
             --- expected
             +++ actual
             @@ -1,10 +1,10 @@
-             <html>
+             <html lang="en">
              <body>
                <h1>Hello World</h1>
             -  <p>Original paragraph.</p>
@@ -2327,6 +2327,72 @@ class SameAsTest {
             Consider comparing smaller sections or reviewing the strings directly.
 
         """.trimIndent()
+    }
+
+    @Test
+    fun `should pass on identical strings with CRLF line endings`() {
+        val string = "unchanged line\r\nexpected content\r\n"
+        string sameAs string
+    }
+
+    @Test
+    fun `should produce readable diff without raw CR for CRLF strings differing in content`() {
+        // given
+        val expected = "unchanged line\r\nexpected content\r\n"
+        val actual   = "unchanged line\r\nactual content\r\n"
+
+        // when
+        val error = assertFailsWith<AssertionError> {
+            actual sameAs expected
+        }
+
+        // then
+        error.message sameAs """
+            --- expected
+            +++ actual
+            @@ -1,2 +1,2 @@
+             unchanged line
+            -expected content
+            +actual content
+
+        """.trimIndent()
+        assert('\r' !in error.message!!)
+    }
+
+    @Test
+    fun `should handle mixed CRLF and LF line endings in baseline-like content`() {
+        // Content with mixed line endings: LF for source sections, CRLF for JS output
+        // check xemantic-typescript-compiler where this bug was initially discovered
+        // given
+        fun makeBaseline(jsLine: String): String = buildString {
+            append("//// [example.ts]\n")
+            append("export const x = 1;\n")
+            append("\n")
+            append("//// [example.js]\r\n")
+            append("$jsLine\r\n")
+        }
+
+        val expected = makeBaseline("export const x = 1;")
+        val actual   = makeBaseline("export const x = 2;")
+
+        // when
+        val error = assertFailsWith<AssertionError> {
+            actual sameAs expected
+        }
+
+        // then
+        error.message sameAs """
+            --- expected
+            +++ actual
+            @@ -2,4 +2,4 @@
+             export const x = 1;
+             
+             //// [example.js]
+            -export const x = 1;
+            +export const x = 2;
+
+        """.trimIndent()
+        assert('\r' !in error.message!!)
     }
 
 }

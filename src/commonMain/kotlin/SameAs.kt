@@ -71,16 +71,22 @@ public infix fun String?.sameAsXml(
  *
  * The standard [String.lines] function adds a trailing empty string when the string ends with \n.
  * This helper removes that trailing empty string to get the actual line content.
+ *
+ * Trailing `\r` characters are stripped from each line to normalize CRLF (`\r\n`) line endings
+ * to LF, so that diff output is readable in terminals and CRLF/LF differences do not garble
+ * the `-`/`+` prefixes via carriage-return overwrite.
  */
 private fun String.splitLinesForDiff(): List<String> {
     if (isEmpty()) return emptyList()
     val lines = lines()
     // If string ends with newline, lines() adds ONE trailing empty string - remove only that one
-    return if (lines.size > 1 && endsWith('\n') && lines.last().isEmpty()) {
+    val trimmedLines = if (lines.size > 1 && endsWith('\n') && lines.last().isEmpty()) {
         lines.dropLast(1)
     } else {
         lines
     }
+    // Normalize CRLF line endings: strip trailing \r so diff output is not garbled in terminals
+    return trimmedLines.map { it.trimEnd('\r') }
 }
 
 /**
