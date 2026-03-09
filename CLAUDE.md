@@ -13,6 +13,10 @@ Both developers and AI agents are expected to add entries as they encounter surp
 
 ## Known gotchas
 
+## Testing conventions
+
+- Tests use `// given`, `// when`, `// then` comments to structure test cases. Use existing test cases as a reference.
+
 ## Anti-patterns to avoid
 
 - Do not add content to this file that is already discoverable by reading the source or build scripts — that inflates context without adding signal, reducing AI agent task success rates (see [arxiv 2602.11988](https://arxiv.org/abs/2602.11988)).
