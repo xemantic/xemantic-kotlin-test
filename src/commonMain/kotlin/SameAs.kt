@@ -81,6 +81,20 @@ public infix fun String?.sameAsXml(
 }
 
 /**
+ * Asserts that this string is the same as the [expected] Markdown string.
+ * Delegates to [sameAs] while providing IDE language injection for Markdown,
+ * enabling syntax highlighting and completion in the [expected] parameter.
+ *
+ * @param expected the expected Markdown string.
+ * @throws AssertionError if the strings are not equal, with unified diff output.
+ */
+public infix fun String?.sameAsMarkdown(
+    @Language("markdown") expected: String
+) {
+    sameAs(expected)
+}
+
+/**
  * Splits a string into lines for diff processing.
  *
  * The standard [String.lines] function adds a trailing empty string when the string ends with \n.

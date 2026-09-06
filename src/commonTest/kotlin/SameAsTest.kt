@@ -16,6 +16,7 @@
 
 package com.xemantic.kotlin.test
 
+import org.intellij.lang.annotations.Language
 import kotlin.test.Test
 import kotlin.test.assertFailsWith
 
@@ -187,6 +188,69 @@ class SameAsTest {
                  </dependency>
                </dependencies>
              </project>
+
+        """.trimIndent()
+    }
+
+    @Test
+    fun `should pass on equal Markdown strings using sameAsMarkdown`() {
+        // given
+        val markdown = """
+            # Heading
+            
+            Some paragraph with **bold** text.
+            
+            - item 1
+            - item 2
+
+        """.trimIndent()
+
+        // then
+        markdown sameAsMarkdown markdown
+    }
+
+    @Test
+    fun `should fail and report difference on different Markdown strings using sameAsMarkdown`() {
+        // given
+        @Language("markdown")
+        val actual = """
+            # Heading
+            
+            Some paragraph with __bold__ text.
+            
+            - item 1
+            - item 3
+
+        """.trimIndent()
+
+        val expected = """
+            # Heading
+            
+            Some paragraph with **bold** text.
+            
+            - item 1
+            - item 2
+
+        """.trimIndent()
+
+        // when
+        val error = assertFailsWith<AssertionError> {
+            actual sameAsMarkdown expected
+        }
+
+        // then
+        error.message sameAs """
+            --- expected
+            +++ actual
+            @@ -1,6 +1,6 @@
+             # Heading
+             
+            -Some paragraph with **bold** text.
+            +Some paragraph with __bold__ text.
+             
+             - item 1
+            -- item 2
+            +- item 3
 
         """.trimIndent()
     }

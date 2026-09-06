@@ -30,6 +30,7 @@ see [DEVELOPMENT.md](DEVELOPMENT.md#markdown-soft-wrapping-in-the-ide) for how t
 - After upgrading the Gradle wrapper, `jvmTest` may fail with `NoSuchFileException: build/test-results/jvmTest/binary/in-progress-results-generic.bin`, because the results of the previous Gradle version are stale — delete `build/test-results` (or run `clean`) and retry.
 - The assertion failure messages asserted in the tests, and quoted in the README, are rendered by the power-assert compiler plugin, so a Kotlin upgrade can change them — Kotlin 2.4 started quoting string values and packing non-colliding values onto one line.
 - In the Gradle Kotlin DSL, `AbstractTestTask` has no `filter { }` block — the name resolves to the `ContentFilterable.filter` extensions and fails to compile; configure test filtering through the property instead: `filter.excludeTestsMatching(...)`.
+- `should` returns the asserted receiver, so a JVM test written with an expression body (`@Test fun foo() = bar() should { ... }`) is silently **not** discovered by JUnit 5, which only recognizes `void` test methods — no failure, no warning, the test just vanishes from the report; other KMP targets run it normally. Always give test functions a block body.
 - `useJUnitPlatform()` is applied explicitly to `KotlinJvmTest` — without it `kotlin-test` resolves to its JUnit 4 variant, and the JVM stack traces quoted in the README stop matching the ones the build produces.
 
 ## Testing conventions

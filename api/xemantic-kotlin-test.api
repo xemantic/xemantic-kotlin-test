@@ -4,7 +4,7 @@ public final class com/xemantic/kotlin/test/AssertionsKt {
 	public static final fun beOrderedBy (Ljava/lang/Iterable;Lkotlin/jvm/functions/Function1;)V
 	public static final fun have (ZLjava/lang/String;)V
 	public static synthetic fun have$default (ZLjava/lang/String;ILjava/lang/Object;)V
-	public static final fun should (Ljava/lang/Object;Lkotlin/jvm/functions/Function1;)V
+	public static final fun should (Ljava/lang/Object;Lkotlin/jvm/functions/Function1;)Ljava/lang/Object;
 }
 
 public final class com/xemantic/kotlin/test/SameAsJsonKt {
@@ -14,6 +14,7 @@ public final class com/xemantic/kotlin/test/SameAsJsonKt {
 public final class com/xemantic/kotlin/test/SameAsKt {
 	public static final fun sameAs (Ljava/lang/String;Ljava/lang/String;)V
 	public static final fun sameAsHtml (Ljava/lang/String;Ljava/lang/String;)V
+	public static final fun sameAsMarkdown (Ljava/lang/String;Ljava/lang/String;)V
 	public static final fun sameAsXml (Ljava/lang/String;Ljava/lang/String;)V
 }
 
