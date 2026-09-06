@@ -1,7 +1,5 @@
 @file:OptIn(ExperimentalWasmDsl::class, ExperimentalKotlinGradlePluginApi::class)
 
-import com.vanniktech.maven.publish.JavadocJar
-import com.vanniktech.maven.publish.KotlinMultiplatform
 import org.gradle.kotlin.dsl.withType
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
@@ -17,7 +15,7 @@ plugins {
     alias(libs.plugins.kotlin.plugin.power.assert)
     alias(libs.plugins.kotlinx.binary.compatibility.validator)
     alias(libs.plugins.dokka)
-    alias(libs.plugins.versions)
+    alias(libs.plugins.version.catalog.update)
     alias(libs.plugins.maven.publish)
     alias(libs.plugins.jreleaser)
     alias(libs.plugins.xemantic.conventions)
@@ -45,7 +43,27 @@ val kotlinTarget = KotlinVersion.fromVersion(libs.versions.kotlinTarget.get())
 val gradleRootDir: String = rootDir.absolutePath
 val fooValue = "bar"
 
+/*
+ * The `ProjectDocumentationTest` is a documentation fixture, not a real test - both
+ * its test cases are meant to fail, to showcase the failure reporting quoted in the
+ * README. It is excluded from the regular build, so that the build stays green, and
+ * run exclusively when the `documentationSnippets` property is set - see
+ * DEVELOPMENT.md.
+ */
+val documentationFixture = "com.xemantic.kotlin.test.ProjectDocumentationTest"
+val documentationSnippets = providers.gradleProperty("documentationSnippets").isPresent
+
+tasks.withType<AbstractTestTask>().configureEach {
+    if (documentationSnippets) {
+        filter.includeTestsMatching("$documentationFixture*")
+    } else {
+        filter.excludeTestsMatching("$documentationFixture*")
+    }
+    filter.isFailOnNoMatchingTests = false
+}
+
 tasks.withType<KotlinJvmTest>().configureEach {
+    useJUnitPlatform()
     environment("GRADLE_ROOT_DIR", gradleRootDir)
     environment("FOO", fooValue)
 }
@@ -72,7 +90,7 @@ kotlin {
         apiVersion = kotlinTarget
         languageVersion = kotlinTarget
         extraWarnings = true
-        progressiveMode = true
+        // progressiveMode = true // will only work since Kotlin 2.3 (maybe event 2.4)
     }
 
     jvm {
@@ -82,7 +100,7 @@ kotlin {
             languageVersion = kotlinTarget
             jvmTarget = JvmTarget.fromTarget(javaTarget)
             freeCompilerArgs.add("-Xjdk-release=$javaTarget")
-            progressiveMode = true
+            // progressiveMode = true // will only work since Kotlin 2.3 (maybe event 2.4)
         }
     }
 
@@ -106,7 +124,6 @@ kotlin {
 
     // native, see https://kotlinlang.org/docs/native-target-support.html
     // tier 1
-    macosX64()
     macosArm64()
     iosSimulatorArm64()
     iosX64()
@@ -116,11 +133,9 @@ kotlin {
     linuxX64()
     linuxArm64()
     watchosSimulatorArm64()
-    watchosX64()
     watchosArm32()
     watchosArm64()
     tvosSimulatorArm64()
-    tvosX64()
     tvosArm64()
 
     // tier 3
@@ -191,25 +206,21 @@ dokka {
     }
 }
 
-mavenPublishing {
+versionCatalogUpdate {
+    // preserve the manual, logically-grouped ordering of libs.versions.toml
+    sortByKey = false
+    keep {
+        // kotlinTarget / javaTarget / asm are plain version constants with no version.ref
+        versions = setOf("kotlinTarget", "javaTarget", "asm")
+        keepUnusedVersions = false
+    }
+}
 
-    configure(KotlinMultiplatform(
-        javadocJar = JavadocJar.Dokka("dokkaGenerateHtml"),
-        sourcesJar = true
-    ))
+mavenPublishing {
 
     signAllPublications()
 
-    publishToMavenCentral(
-        automaticRelease = true,
-        validateDeployment = false // for kotlin multiplatform projects it might take a while (>900s)
-    )
-
-    coordinates(
-        groupId = group.toString(),
-        artifactId = rootProject.name,
-        version = version.toString()
-    )
+    publishToMavenCentral(automaticRelease = true)
 
     pom {
 
