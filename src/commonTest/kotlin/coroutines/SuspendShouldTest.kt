@@ -26,6 +26,7 @@ import kotlin.test.assertContains
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
+import kotlin.time.Duration.Companion.milliseconds
 
 class SuspendShouldTest {
 
@@ -40,7 +41,7 @@ class SuspendShouldTest {
     )
 
     private suspend fun fetchUser(): AsyncUser {
-        delay(10)
+        delay(10.milliseconds)
         return AsyncUser(
             name = "Alice",
             messages = listOf(
@@ -51,7 +52,7 @@ class SuspendShouldTest {
     }
 
     private suspend fun fetchMessage(id: Int): AsyncMessage? {
-        delay(5)
+        delay(5.milliseconds)
         return when (id) {
             1 -> AsyncMessage(1, "Hello")
             2 -> AsyncMessage(2, "World")
@@ -60,7 +61,7 @@ class SuspendShouldTest {
     }
 
     private suspend fun calculateSum(a: Int, b: Int): Int {
-        delay(1)
+        delay(1.milliseconds)
         return a + b
     }
 
@@ -136,7 +137,7 @@ class SuspendShouldTest {
                 |have(name == "Bob")
                 |     |    |
                 |     |    false
-                |     Alice
+                |     "Alice"
                 |
             """.trimMargin(),
             actual = exception.message
@@ -155,8 +156,7 @@ class SuspendShouldTest {
                 |
                 |have(messages.size == 3)
                 |     |        |    |
-                |     |        |    false
-                |     |        2
+                |     |        2    false
                 |     [AsyncMessage(id=1, content=Hello), AsyncMessage(id=2, content=World)]
                 |
             """.trimMargin(),
@@ -178,8 +178,7 @@ class SuspendShouldTest {
                 |
                 |have(content == "Goodbye")
                 |     |       |
-                |     |       false
-                |     Hello
+                |     "Hello" false
                 |
             """.trimMargin(),
             actual = exception.message
@@ -200,8 +199,7 @@ class SuspendShouldTest {
                 |
                 |have(content == "Goodbye")
                 |     |       |
-                |     |       false
-                |     Hello
+                |     "Hello" false
                 |
             """.trimMargin(),
             actual = exception.message
@@ -220,8 +218,7 @@ class SuspendShouldTest {
                 |
                 |assert(this == 6)
                 |       |    |
-                |       |    false
-                |       5
+                |       5    false
                 |
             """.trimMargin(),
             actual = exception.message

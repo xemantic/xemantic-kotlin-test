@@ -134,8 +134,7 @@ class AssertionsTest {
                 |
                 |have(id == 0)
                 |     |  |
-                |     |  false
-                |     42
+                |     42 false
                 |
             """.trimMargin(),
             actual = exception.message
@@ -198,7 +197,7 @@ class AssertionsTest {
                 |have(type == "image/jpeg")
                 |     |    |
                 |     |    false
-                |     image/png
+                |     "image/png"
                 |
       """.trimMargin(),
             actual = exception.message
@@ -216,9 +215,8 @@ class AssertionsTest {
                 |
                 |assert(2 + 2 == 2 + 3)
                 |         |   |    |
-                |         |   |    5
-                |         |   false
-                |         4
+                |         4   |    5
+                |             false
                 |
       """.trimMargin(),
             actual = exception.message

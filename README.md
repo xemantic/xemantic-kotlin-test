@@ -21,7 +21,11 @@ An AX-first (AI/Agent Experience) Kotlin multiplatform testing library with powe
 
 ## Why?
 
-If you're writing code with AI agents, you've likely discovered that LLMs produce their best work when we reduce cognitive load. When meaning can be conveyed concisely in a semi-natural language flow, results improve dramatically. Markdown typically outperforms even minimal HTML because it's less cluttered with style and formatting noise. LLMs struggle when forced to multitask—like generating code while simultaneously escaping it for JSON. This library is AX-first: designed to minimize cognitive load in test cases, which also makes them excellent as model evals.
+If you're writing code with AI agents, you've likely discovered that LLMs produce their best work when we reduce cognitive load.
+When meaning can be conveyed concisely in a semi-natural language flow, results improve dramatically.
+Markdown typically outperforms even minimal HTML because it's less cluttered with style and formatting noise.
+LLMs struggle when forced to multitask—like generating code while simultaneously escaping it for JSON.
+This library is AX-first: designed to minimize cognitive load in test cases, which also makes them excellent as model evals.
 
 My typical workflow looks like this:
 1. Write a single test case using this library
@@ -29,12 +33,18 @@ My typical workflow looks like this:
 3. Review, refine, and add edge cases until coverage is satisfactory
 4. In a fresh context window, have the agent implement the functionality
 
-Sometimes it takes minutes, sometimes it takes hours. An agent can produce thousands of lines of code, run tests, and try to fix errors in a long feedback loop session. Quite often I don't even look much at the implementation, trusting our shared TDD approach.
+Sometimes it takes minutes, sometimes it takes hours.
+An agent can produce thousands of lines of code, run tests, and try to fix errors in a long feedback loop session.
+Quite often I don't even look much at the implementation, trusting our shared TDD approach.
 
-In agentic loops, error reporting needs to be spot-on—providing maximum precision with minimal tokens. Typical unit test assertion libraries are designed for humans, not AI agents. It's easy for us to interpret a standard `assertEquals` failure rendered nicely in IntelliJ, but LLMs don't process this output the same way. This is why the library uses unified diff-based output when assertions fail, giving LLMs precise information on how to correct themselves.
+In agentic loops, error reporting needs to be spot-on—providing maximum precision with minimal tokens.
+Typical unit test assertion libraries are designed for humans, not AI agents.
+It's easy for us to interpret a standard `assertEquals` failure rendered nicely in IntelliJ, but LLMs don't process this output the same way.
+This is why the library uses unified diff-based output when assertions fail, giving LLMs precise information on how to correct themselves.
 
 In the past I've been mostly using [kotest](https://kotest.io/) library for writing test assertions in my projects.
-When [power-assert](https://kotlinlang.org/docs/power-assert.html) became the official Kotlin compiler plugin, I also realized that most of the kotest assertions can be replaced with something which suits my needs much better, while being even easier for machines to digest. Instead of writing:
+When [power-assert](https://kotlinlang.org/docs/power-assert.html) became the official Kotlin compiler plugin, I also realized that most of the kotest assertions can be replaced with something which suits my needs much better, while being even easier for machines to digest.
+Instead of writing:
 
 ```kotlin
 x shouldBeGreaterThanOrEqualTo 42
@@ -80,7 +90,7 @@ MediaType(type=image/jpeg)
 have(type == "image/png")
      |    |
      |    false
-     image/jpeg
+     "image/jpeg"
 ```
 
 In addition, the library supports:
@@ -98,8 +108,8 @@ In your `build.gradle.kts`:
 
 ```kotlin
 plugins {
-    kotlin("multiplatform") version "2.2.20"
-    kotlin("plugin.power-assert") version "2.2.20" // replace with the latest kotlin version
+    kotlin("multiplatform") version "2.4.10"
+    kotlin("plugin.power-assert") version "2.4.10" // replace with the latest kotlin version
 }
 
 kotlin {
@@ -129,8 +139,8 @@ In your `build.gradle.kts`:
 
 ```kotlin
 plugins {
-    kotlin("jvm") version "2.2.20"
-    kotlin("plugin.power-assert") version "2.2.20" // replace with the latest kotlin version
+    kotlin("jvm") version "2.4.10"
+    kotlin("plugin.power-assert") version "2.4.10" // replace with the latest kotlin version
 }
 
 dependencies {
@@ -229,7 +239,8 @@ For comparing JSON strings, use the `sameAsJson` function which automatically pr
 actualJsonString sameAsJson expectedJsonString
 ```
 
-This is particularly useful when comparing JSON outputs from APIs or serializers. The actual JSON will be automatically formatted with 2-space indentation, preserving object key order:
+This is particularly useful when comparing JSON outputs from APIs or serializers.
+The actual JSON will be automatically formatted with 2-space indentation, preserving object key order:
 
 ```kotlin
 """{"foo":"bar","baz":42}""" sameAsJson """
@@ -268,7 +279,8 @@ If the actual JSON is malformed, `sameAsJson` throws `AssertionError` with a det
 ```
 
 > [!TIP]
-> `sameAsJson` is ideal for AI agent workflows when testing JSON serialization, API responses, or any JSON-based data structures. The semantic comparison ignores formatting differences while the unified diff output helps agents quickly identify and fix discrepancies.
+> `sameAsJson` is ideal for AI agent workflows when testing JSON serialization, API responses, or any JSON-based data structures.
+> The semantic comparison ignores formatting differences while the unified diff output helps agents quickly identify and fix discrepancies.
 
 ### Test Context
 
@@ -305,7 +317,8 @@ tasks.withType<KotlinNativeTest>().configureEach {
 }
 ```
 
-and specify environment variables you are interested in. The `SIMCTL_CHILD_` is used in tests running inside emulators.
+and specify environment variables you are interested in.
+The `SIMCTL_CHILD_` is used in tests running inside emulators.
 
 To pass environment variables to browser tests, you have to create `webpack.confg.d` folder and drop this file named `env-config.js`:
 
@@ -346,7 +359,8 @@ class FooTest {
 
 ## Test failure reporting designed for AI agents
 
-An AI-friendly test failure reporting can be configured with the [xemantic-conventions](https://github.com/xemantic/xemantic-conventions) gradle plugin, designed to work together with this library. AI-first asserts, together with XML-wrapped failure reporting, allow an autonomous AI agent to perform Test Driven Development (TDD) in a feedback loop, retaining maximal context while avoidng context rot with minimal noise.
+An AI-friendly test failure reporting can be configured with the [xemantic-conventions](https://github.com/xemantic/xemantic-conventions) gradle plugin, designed to work together with this library.
+AI-first asserts, together with XML-wrapped failure reporting, allow an autonomous AI agent to perform Test Driven Development (TDD) in a feedback loop, retaining maximal context while avoidng context rot with minimal noise.
 
 The [ProjectDocumentationTest](src/commonTest/kotlin/ProjectDocumentationTest.kt):
 
@@ -370,114 +384,149 @@ class ProjectDocumentationTest {
 }
 ```
 
-when run, will produce:
+is excluded from the regular build by a test filter in [build.gradle.kts](build.gradle.kts),
+so that the build stays green,
+without polluting the class with an `@Ignore`.
+The filter is inverted by the `documentationSnippets` property,
+which runs this fixture, and only this fixture,
+to regenerate the snippets below - see [DEVELOPMENT.md](DEVELOPMENT.md#documentation-snippets).
+When run, it produces:
 
 ```
 > Task :jvmTest FAILED
+
 <test-failure test="com.xemantic.kotlin.test.ProjectDocumentationTest.foo sameAs bar()" platform="jvm">
 <message>
 --- expected
 +++ actual
-@@ -1,1 +1,1 @@
+@@ -1 +1 @@
 -bar
 \ No newline at end of file
 +foo
 \ No newline at end of file
+
 </message>
 <stacktrace>
   at app//org.junit.jupiter.api.AssertionUtils.fail(AssertionUtils.java:38)
   at app//org.junit.jupiter.api.Assertions.fail(Assertions.java:138)
   at app//kotlin.test.junit5.JUnit5Asserter.fail(JUnitSupport.kt:56)
-  at app//kotlin.test.AssertionsKt__AssertionsKt.fail(Assertions.kt:562)
+  at app//kotlin.test.AssertionsKt__AssertionsKt.fail(Assertions.kt:565)
   at app//kotlin.test.AssertionsKt.fail(Unknown Source)
-  at app//com.xemantic.kotlin.test.SameAsKt.sameAs(SameAs.kt:37)
-  at app//com.xemantic.kotlin.test.ProjectDocumentationTest.foo sameAs bar(ProjectDocumentationTest.kt:30)
-  at java.base@24.0.2/java.lang.reflect.Method.invoke(Method.java:565)
-  at java.base@24.0.2/java.util.ArrayList.forEach(ArrayList.java:1604)
-  at java.base@24.0.2/java.util.ArrayList.forEach(ArrayList.java:1604)
+  at app//com.xemantic.kotlin.test.SameAsKt.sameAs(SameAs.kt:52)
+  at app//com.xemantic.kotlin.test.ProjectDocumentationTest.foo sameAs bar(ProjectDocumentationTest.kt:51)
+  at java.base@21.0.5/java.lang.reflect.Method.invoke(Method.java:580)
+  at java.base@21.0.5/java.util.ArrayList.forEach(ArrayList.java:1596)
+  at java.base@21.0.5/java.util.ArrayList.forEach(ArrayList.java:1596)
 </stacktrace>
 </test-failure>
+
+
 ProjectDocumentationTest[jvm] > foo sameAs bar()[jvm] FAILED
+
 <test-failure test="com.xemantic.kotlin.test.ProjectDocumentationTest.foo equals bar()" platform="jvm">
 <message>
+
 assert("foo" == "bar")
              |
              false
+
 </message>
 <stacktrace>
   at app//org.junit.jupiter.api.AssertionUtils.fail(AssertionUtils.java:38)
   at app//org.junit.jupiter.api.Assertions.fail(Assertions.java:138)
   at app//kotlin.test.junit5.JUnit5Asserter.fail(JUnitSupport.kt:56)
-  at app//kotlin.test.Asserter.assertTrue(Assertions.kt:694)
+  at app//kotlin.test.Asserter.assertTrue(Assertions.kt:767)
   at app//kotlin.test.junit5.JUnit5Asserter.assertTrue(JUnitSupport.kt:30)
-  at app//kotlin.test.Asserter.assertTrue(Assertions.kt:704)
+  at app//kotlin.test.Asserter.assertTrue(Assertions.kt:777)
   at app//kotlin.test.junit5.JUnit5Asserter.assertTrue(JUnitSupport.kt:30)
   at app//com.xemantic.kotlin.test.AssertionsKt.assert(Assertions.kt:32)
-  at app//com.xemantic.kotlin.test.ProjectDocumentationTest.foo equals bar(ProjectDocumentationTest.kt:25)
-  at java.base@24.0.2/java.lang.reflect.Method.invoke(Method.java:565)
-  at java.base@24.0.2/java.util.ArrayList.forEach(ArrayList.java:1604)
-  at java.base@24.0.2/java.util.ArrayList.forEach(ArrayList.java:1604)
+  at app//com.xemantic.kotlin.test.ProjectDocumentationTest.foo equals bar(ProjectDocumentationTest.kt:46)
+  at java.base@21.0.5/java.lang.reflect.Method.invoke(Method.java:580)
+  at java.base@21.0.5/java.util.ArrayList.forEach(ArrayList.java:1596)
+  at java.base@21.0.5/java.util.ArrayList.forEach(ArrayList.java:1596)
 </stacktrace>
 </test-failure>
+
+
 ProjectDocumentationTest[jvm] > foo equals bar()[jvm] FAILED
+
+2 tests completed, 2 failed
 ```
 
 For the `wasmJs` platform it will produce:
 
 ```
 com.xemantic.kotlin.test.ProjectDocumentationTest.foo equals bar[wasmJs, node] FAILED
+
 com.xemantic.kotlin.test.ProjectDocumentationTest.foo sameAs bar[wasmJs, node] FAILED
+
 > Task :wasmJsNodeTest FAILED
+
 <test-failure test="com.xemantic.kotlin.test.ProjectDocumentationTest.foo equals bar" platform="wasmJsNode">
 <message>
 
 assert("foo" == "bar")
              |
              false
+
+AssertionError: 
+assert("foo" == "bar")
+             |
+             false
 </message>
 <stacktrace>
-  at kotlin.createJsError(file:///Users/morisil/git/xemantic/xemantic-kotlin-test/build/wasm/packages/xemantic-kotlin-test-test/kotlin/xemantic-kotlin-test-test.uninstantiated.mjs:19)
-  at com.xemantic.kotlin:xemantic-kotlin-test_test.kotlin.createJsError__externalAdapter(wasm://wasm/com.xemantic.kotlin:xemantic-kotlin-test_test-006452c2)
-  at com.xemantic.kotlin:xemantic-kotlin-test_test.kotlin.Throwable.<init>(wasm://wasm/com.xemantic.kotlin:xemantic-kotlin-test_test-006452c2)
-  at com.xemantic.kotlin:xemantic-kotlin-test_test.kotlin.Error.<init>(wasm://wasm/com.xemantic.kotlin:xemantic-kotlin-test_test-006452c2)
-  at com.xemantic.kotlin:xemantic-kotlin-test_test.kotlin.AssertionError.<init>(wasm://wasm/com.xemantic.kotlin:xemantic-kotlin-test_test-006452c2)
-  at com.xemantic.kotlin:xemantic-kotlin-test_test.kotlin.test.DefaultWasmAsserter.assertTrue(wasm://wasm/com.xemantic.kotlin:xemantic-kotlin-test_test-006452c2)
-  at com.xemantic.kotlin:xemantic-kotlin-test_test.kotlin.test.DefaultWasmAsserter.assertTrue(wasm://wasm/com.xemantic.kotlin:xemantic-kotlin-test_test-006452c2)
-  at com.xemantic.kotlin:xemantic-kotlin-test_test.com.xemantic.kotlin.test.assert(wasm://wasm/com.xemantic.kotlin:xemantic-kotlin-test_test-006452c2)
-  at com.xemantic.kotlin:xemantic-kotlin-test_test.com.xemantic.kotlin.test.ProjectDocumentationTest.foo equals bar(wasm://wasm/com.xemantic.kotlin:xemantic-kotlin-test_test-006452c2)
-  at ref.invoke(wasm://wasm/com.xemantic.kotlin:xemantic-kotlin-test_test-006452c2)
+  at kotlin.createJsError(file:///Users/morisil/git/xemantic/xemantic-kotlin-test/build/wasm/packages/xemantic-kotlin-test-test/kotlin/xemantic-kotlin-test-test.import-object.mjs:121)
+  at com.xemantic.kotlin:xemantic-kotlin-test_test.kotlin.createJsError__externalAdapter(wasm://wasm/com.xemantic.kotlin:xemantic-kotlin-test_test-00c20fc6)
+  at com.xemantic.kotlin:xemantic-kotlin-test_test.kotlin.Throwable.<init>(wasm://wasm/com.xemantic.kotlin:xemantic-kotlin-test_test-00c20fc6)
+  at com.xemantic.kotlin:xemantic-kotlin-test_test.kotlin.Error.<init>(wasm://wasm/com.xemantic.kotlin:xemantic-kotlin-test_test-00c20fc6)
+  at com.xemantic.kotlin:xemantic-kotlin-test_test.kotlin.AssertionError.<init>(wasm://wasm/com.xemantic.kotlin:xemantic-kotlin-test_test-00c20fc6)
+  at com.xemantic.kotlin:xemantic-kotlin-test_test.kotlin.test.DefaultWasmAsserter.assertTrue(wasm://wasm/com.xemantic.kotlin:xemantic-kotlin-test_test-00c20fc6)
+  at com.xemantic.kotlin:xemantic-kotlin-test_test.kotlin.test.DefaultWasmAsserter.assertTrue(wasm://wasm/com.xemantic.kotlin:xemantic-kotlin-test_test-00c20fc6)
+  at com.xemantic.kotlin:xemantic-kotlin-test_test.com.xemantic.kotlin.test.assert(wasm://wasm/com.xemantic.kotlin:xemantic-kotlin-test_test-00c20fc6)
+  at com.xemantic.kotlin:xemantic-kotlin-test_test.com.xemantic.kotlin.test.ProjectDocumentationTest.foo equals bar(wasm://wasm/com.xemantic.kotlin:xemantic-kotlin-test_test-00c20fc6)
+  at ref.invoke(wasm://wasm/com.xemantic.kotlin:xemantic-kotlin-test_test-00c20fc6)
 </stacktrace>
 </test-failure>
+
+
 <test-failure test="com.xemantic.kotlin.test.ProjectDocumentationTest.foo sameAs bar" platform="wasmJsNode">
 <message>
 --- expected
 +++ actual
-@@ -1,1 +1,1 @@
+@@ -1 +1 @@
+-bar
+\ No newline at end of file
++foo
+\ No newline at end of file
+
+AssertionError: --- expected
++++ actual
+@@ -1 +1 @@
 -bar
 \ No newline at end of file
 +foo
 \ No newline at end of file
 </message>
 <stacktrace>
-  at kotlin.createJsError(file:///Users/morisil/git/xemantic/xemantic-kotlin-test/build/wasm/packages/xemantic-kotlin-test-test/kotlin/xemantic-kotlin-test-test.uninstantiated.mjs:19)
-  at com.xemantic.kotlin:xemantic-kotlin-test_test.kotlin.createJsError__externalAdapter(wasm://wasm/com.xemantic.kotlin:xemantic-kotlin-test_test-006452c2)
-  at com.xemantic.kotlin:xemantic-kotlin-test_test.kotlin.Throwable.<init>(wasm://wasm/com.xemantic.kotlin:xemantic-kotlin-test_test-006452c2)
-  at com.xemantic.kotlin:xemantic-kotlin-test_test.kotlin.Error.<init>(wasm://wasm/com.xemantic.kotlin:xemantic-kotlin-test_test-006452c2)
-  at com.xemantic.kotlin:xemantic-kotlin-test_test.kotlin.AssertionError.<init>(wasm://wasm/com.xemantic.kotlin:xemantic-kotlin-test_test-006452c2)
-  at com.xemantic.kotlin:xemantic-kotlin-test_test.kotlin.test.DefaultWasmAsserter.fail(wasm://wasm/com.xemantic.kotlin:xemantic-kotlin-test_test-006452c2)
-  at com.xemantic.kotlin:xemantic-kotlin-test_test.kotlin.test.DefaultWasmAsserter.fail(wasm://wasm/com.xemantic.kotlin:xemantic-kotlin-test_test-006452c2)
-  at com.xemantic.kotlin:xemantic-kotlin-test_test.kotlin.test.fail(wasm://wasm/com.xemantic.kotlin:xemantic-kotlin-test_test-006452c2)
-  at com.xemantic.kotlin:xemantic-kotlin-test_test.com.xemantic.kotlin.test.sameAs(wasm://wasm/com.xemantic.kotlin:xemantic-kotlin-test_test-006452c2)
-  at com.xemantic.kotlin:xemantic-kotlin-test_test.com.xemantic.kotlin.test.ProjectDocumentationTest.foo sameAs bar(wasm://wasm/com.xemantic.kotlin:xemantic-kotlin-test_test-006452c2)
+  at kotlin.createJsError(file:///Users/morisil/git/xemantic/xemantic-kotlin-test/build/wasm/packages/xemantic-kotlin-test-test/kotlin/xemantic-kotlin-test-test.import-object.mjs:121)
+  at com.xemantic.kotlin:xemantic-kotlin-test_test.kotlin.createJsError__externalAdapter(wasm://wasm/com.xemantic.kotlin:xemantic-kotlin-test_test-00c20fc6)
+  at com.xemantic.kotlin:xemantic-kotlin-test_test.kotlin.Throwable.<init>(wasm://wasm/com.xemantic.kotlin:xemantic-kotlin-test_test-00c20fc6)
+  at com.xemantic.kotlin:xemantic-kotlin-test_test.kotlin.Error.<init>(wasm://wasm/com.xemantic.kotlin:xemantic-kotlin-test_test-00c20fc6)
+  at com.xemantic.kotlin:xemantic-kotlin-test_test.kotlin.AssertionError.<init>(wasm://wasm/com.xemantic.kotlin:xemantic-kotlin-test_test-00c20fc6)
+  at com.xemantic.kotlin:xemantic-kotlin-test_test.kotlin.test.DefaultWasmAsserter.fail(wasm://wasm/com.xemantic.kotlin:xemantic-kotlin-test_test-00c20fc6)
+  at com.xemantic.kotlin:xemantic-kotlin-test_test.kotlin.test.DefaultWasmAsserter.fail(wasm://wasm/com.xemantic.kotlin:xemantic-kotlin-test_test-00c20fc6)
+  at com.xemantic.kotlin:xemantic-kotlin-test_test.kotlin.test.fail(wasm://wasm/com.xemantic.kotlin:xemantic-kotlin-test_test-00c20fc6)
+  at com.xemantic.kotlin:xemantic-kotlin-test_test.com.xemantic.kotlin.test.sameAs(wasm://wasm/com.xemantic.kotlin:xemantic-kotlin-test_test-00c20fc6)
+  at com.xemantic.kotlin:xemantic-kotlin-test_test.com.xemantic.kotlin.test.ProjectDocumentationTest.foo sameAs bar(wasm://wasm/com.xemantic.kotlin:xemantic-kotlin-test_test-00c20fc6)
 </stacktrace>
 </test-failure>
+
+
 2 tests completed, 2 failed
 ```
 
 ## Development
 
-Clone this project, and then run:
-
-```shell
-./gradlew build
-```
+See [DEVELOPMENT.md](DEVELOPMENT.md) for maintenance notes —
+building the project, updating the gradle wrapper and the project dependencies,
+and the conventions used to author the documentation.
