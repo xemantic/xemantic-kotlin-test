@@ -223,6 +223,44 @@ class AssertionsTest {
         )
     }
 
+    @Test
+    fun `should return the asserted object`() {
+        // when
+        val result = message should {
+            have(id == 42)
+        }
+
+        // then
+        assert(message === result)
+    }
+
+    @Test
+    fun `should return non-null object when asserting on nullable reference`() {
+        // given
+        val nullableMessage: Message? = message
+
+        // when
+        val result: Message = nullableMessage should {
+            have(id == 42)
+        }
+
+        // then
+        assert(message === result)
+    }
+
+    @Test
+    fun `should allow chaining assertions on the returned object`() {
+        // when
+        val result = message should {
+            have(id == 42)
+        } should {
+            have(content.size == 2)
+        }
+
+        // then
+        assert(message === result)
+    }
+
     // beOrderedBy tests
 
     data class Item(val id: Int, val name: String)

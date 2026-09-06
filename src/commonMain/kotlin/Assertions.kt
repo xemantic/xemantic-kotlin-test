@@ -32,14 +32,34 @@ public fun assert(actual: Boolean, message: String? = null) {
     return asserter.assertTrue(message ?: "Expected value to be true.", actual)
 }
 
+/**
+ * Asserts that this object is not `null` and runs the [block] of assertions on it.
+ *
+ * Returns the asserted object, so that it can be used further, e.g.:
+ *
+ * ```kotlin
+ * val session = createSession() should {
+ *     have(id.isNotBlank())
+ * }
+ * ```
+ *
+ * Note: the returned value has the type of the receiver, therefore a type
+ * narrowing done with [be] inside the [block] will not be reflected in the
+ * type of the returned value.
+ *
+ * @param block the assertions to run on this object.
+ * @return this object, guaranteed to be non-`null`.
+ * @throws AssertionError if this object is `null`, or if any assertion in the [block] fails.
+ */
 @OptIn(ExperimentalContracts::class)
-public infix fun <T> T?.should(block: T.() -> Unit) {
+public infix fun <T> T?.should(block: T.() -> Unit): T & Any {
     contract {
         callsInPlace(block, InvocationKind.EXACTLY_ONCE)
         returns() implies (this@should != null)
     }
     assertNotNull(this)
     block()
+    return this
 }
 
 @OptIn(ExperimentalContracts::class)

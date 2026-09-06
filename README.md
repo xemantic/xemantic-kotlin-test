@@ -175,6 +175,26 @@ someObject should {
 }
 ```
 
+The `should` function returns the asserted object,
+which is handy when the object is created and verified in one go:
+
+```kotlin
+val session = createSession() should {
+    have(id.isNotBlank())
+    have(messages.isEmpty())
+}
+// session can be used further, and it is guaranteed to be non-null
+```
+
+> [!NOTE]
+> The returned value has the static type of the receiver,
+> therefore a type narrowing done with `be` inside the `should {}` block is not reflected in the type of the returned value.
+
+> [!WARNING]
+> JUnit 5 discovers only `@Test` methods returning `void`,
+> so on the JVM an expression body like `@Test fun foo() = bar() should { ... }` is silently not executed - no failure, no warning, the test simply disappears from the report.
+> Always use a block body for test functions.
+
 ### Type Assertions
 
 You can assert the type of object using the [be](src/commonMain/kotlin/Assertions.kt) function:
@@ -230,6 +250,16 @@ When the strings differ, `sameAs` produces clear diff output similar to git diff
 +actual line2
  line3
 ```
+
+The `sameAs` function has variants which delegate to it, and additionally declare the expected string language, so that the IDE can inject syntax highlighting and completion into the expected string literal:
+
+```kotlin
+actualHtml sameAsHtml expectedHtml
+actualXml sameAsXml expectedXml
+actualMarkdown sameAsMarkdown expectedMarkdown
+```
+
+The comparison itself is identical to `sameAs` - the strings are compared verbatim, without any language specific normalization.
 
 ### JSON Comparison with Semantic Formatting
 

@@ -100,6 +100,28 @@ class SuspendShouldTest {
     }
 
     @Test
+    fun `should return the asserted suspend result`() = runTest {
+        // when
+        val user = fetchUser() should {
+            have(name == "Alice")
+        }
+
+        // then
+        assert(user.name == "Alice")
+    }
+
+    @Test
+    fun `should return non-null object when asserting on nullable suspend result`() = runTest {
+        // when
+        val message: AsyncMessage = fetchMessage(1) should {
+            have(content == "Hello")
+        }
+
+        // then
+        assert(message.id == 1)
+    }
+
+    @Test
     fun `should fail when asserting on null suspend result`() = runTest {
         val nullMessage: AsyncMessage? = fetchMessage(999)
         val exception = assertFailsWith<AssertionError> {
